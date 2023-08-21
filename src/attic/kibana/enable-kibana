@@ -1,4 +1,0 @@
-set -x
-sudo systemctl enable kibana
-sudo systemctl enable nginx
-

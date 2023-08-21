@@ -1,4 +1,0 @@
-set -x
-sudo systemctl stop httpd
-sudo yum remove  -y pgadmin4-web
-sudo systemctl disable httpd

@@ -1,7 +1,0 @@
-
-if [ `uname` == "Darwin" ]; then
-  brew services stop docker
-  exit 0
-fi
-
-sudo systemctl stop docker

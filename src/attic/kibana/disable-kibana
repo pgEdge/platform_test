@@ -1,4 +1,0 @@
-set -x
-sudo systemctl disable kibana
-sudo systemctl disable nginx
-

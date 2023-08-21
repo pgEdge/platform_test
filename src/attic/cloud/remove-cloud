@@ -1,4 +1,0 @@
-
-pip3 uninstall -y apache-libcloud
-pip3 uninstall -y fire
-

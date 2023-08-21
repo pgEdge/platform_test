@@ -1,4 +1,0 @@
-set -x
-sudo systemctl start kibana
-sudo systemctl start nginx
-

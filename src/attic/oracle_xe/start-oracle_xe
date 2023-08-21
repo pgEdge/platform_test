@@ -1,7 +1,0 @@
-cmd="sudo /etc/init.d/oracle-xe-21c start"
-echo "# $cmd"
-$cmd
-
-exit 0
-
-

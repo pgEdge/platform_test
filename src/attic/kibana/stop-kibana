@@ -1,3 +1,0 @@
-set -x
-sudo systemctl stop kibana
-sudo systemctl stop nginx
