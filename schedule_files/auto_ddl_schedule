@@ -30,6 +30,9 @@ t/auto_ddl/6100c_table_validate_n1.sql
 t/auto_ddl/6111a_table_tx_ctas_selectinto_like.sql
 t/auto_ddl/6111b_table_validate_and_drop_n2.sql
 t/auto_ddl/6111c_table_validate_n1.sql
+t/auto_ddl/6122a_table_range_partitions_n1.sql
+t/auto_ddl/6122b_table_range_partitions_validate_n2.sql
+t/auto_ddl/6122c_table_range_parition_validate_n1.sql
 ##
 # cleanup scripts
 ##

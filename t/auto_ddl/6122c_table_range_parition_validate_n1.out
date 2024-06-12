@@ -1,0 +1,39 @@
+-- This file runs on n1 again to see all the table and their partitions have been dropped on n1 (as a result of drop statements)
+-- being auto replicated via 6122b
+--spock.tables should be empty
+SELECT * FROM spock.tables ORDER BY relid;
+ relid | nspname | relname | set_name 
+-------+---------+---------+----------
+(0 rows)
+
+-- none of these tables should exist.
+\d+ sales_range
+Did not find any relation named "sales_range".
+\d+ sales_range_2021
+Did not find any relation named "sales_range_2021".
+\d+ sales_range_2022
+Did not find any relation named "sales_range_2022".
+\d+ sales_range_2023
+Did not find any relation named "sales_range_2023".
+\d+ revenue_range
+Did not find any relation named "revenue_range".
+\d+ revenue_range_2021
+Did not find any relation named "revenue_range_2021".
+\d+ revenue_range_2022
+Did not find any relation named "revenue_range_2022".
+\d orders_range
+Did not find any relation named "orders_range".
+\d+ orders_range
+Did not find any relation named "orders_range".
+\d+ orders_range_2021
+Did not find any relation named "orders_range_2021".
+\d+ orders_range_2022
+Did not find any relation named "orders_range_2022".
+\d+ inventory_range
+Did not find any relation named "inventory_range".
+\d+ inventory_range_2021
+Did not find any relation named "inventory_range_2021".
+\d+ inventory_range_default
+Did not find any relation named "inventory_range_default".
+\d+ inventory_standalone
+Did not find any relation named "inventory_standalone".

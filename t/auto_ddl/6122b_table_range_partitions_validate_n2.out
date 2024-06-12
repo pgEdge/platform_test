@@ -1,0 +1,288 @@
+--This file will run on n2 and validate all the replicated tables data, structure and replication sets they're in
+-- Prepared statement for spock.tables to list parent and child tables as parent table name will be contained in partition name
+PREPARE spocktab AS SELECT nspname, relname, set_name FROM spock.tables WHERE relname LIKE '%' || $1 || '%' ORDER BY relid;
+PREPARE
+EXECUTE spocktab('sales_range'); -- Expect sales_range, sales_range_2022, sales_range_2021 in default set
+ nspname |     relname      | set_name 
+---------+------------------+----------
+ public  | sales_range      | default
+ public  | sales_range_2021 | default
+ public  | sales_range_2022 | default
+(3 rows)
+
+EXECUTE spocktab('revenue_range'); -- Expect revenue_range, revenue_range_2023 in default and revenue_range_2021, revenue_range_2022 in default_insert_only set
+ nspname |      relname       |      set_name       
+---------+--------------------+---------------------
+ public  | revenue_range      | default
+ public  | revenue_range_2021 | default_insert_only
+ public  | revenue_range_2022 | default_insert_only
+ public  | revenue_range_2023 | default
+(4 rows)
+
+EXECUTE spocktab('orders_range'); -- Expect orders_range, orders_range_2021, orders_range_2022 in default set
+ nspname |      relname      | set_name 
+---------+-------------------+----------
+ public  | orders_range      | default
+ public  | orders_range_2021 | default
+ public  | orders_range_2022 | default
+(3 rows)
+
+-- Validate final data
+SELECT * FROM sales_range ORDER BY sale_id; -- Expect all rows
+ sale_id | sale_date  | amount 
+---------+------------+--------
+       1 | 2021-03-15 | 150.00
+       2 | 2021-07-21 | 200.00
+       3 | 2022-02-10 | 250.00
+(3 rows)
+
+SELECT * FROM revenue_range ORDER BY rev_id; -- Expect all rows
+ rev_id |  rev_date  | revenue 
+--------+------------+---------
+    101 | 2021-04-12 |  300.00
+    102 | 2022-05-18 |  400.00
+    103 | 2023-07-15 |  500.00
+(3 rows)
+
+SELECT * FROM orders_range ORDER BY order_id; -- Expect all rows
+ order_id | order_date | customer_id |  total  
+----------+------------+-------------+---------
+     1001 | 2021-06-15 |           1 |  500.00
+     1002 | 2022-01-10 |           2 | 1000.00
+(2 rows)
+
+SELECT * FROM inventory_range_default ORDER BY product_id; -- Expect 2 rows
+ product_id | product_date | quantity | price 
+------------+--------------+----------+-------
+          2 | 2022-02-10   |      100 |      
+          3 | 2025-01-01   |      150 |      
+(2 rows)
+
+SELECT * FROM inventory_standalone ORDER BY product_id; -- Expect 1 row
+ product_id | product_date | quantity | price 
+------------+--------------+----------+-------
+          4 | 2023-03-15   |      200 | 19.99
+(1 row)
+
+-- Validate final structure
+\d+ sales_range
+                                  Partitioned table "public.sales_range"
+  Column   |  Type   | Collation | Nullable | Default | Storage | Compression | Stats target | Description 
+-----------+---------+-----------+----------+---------+---------+-------------+--------------+-------------
+ sale_id   | integer |           | not null |         | plain   |             |              | 
+ sale_date | date    |           | not null |         | plain   |             |              | 
+ amount    | numeric |           |          |         | main    |             |              | 
+Partition key: RANGE (sale_date)
+Indexes:
+    "sales_range_pkey" PRIMARY KEY, btree (sale_id, sale_date)
+Partitions: sales_range_2021 FOR VALUES FROM ('2021-01-01') TO ('2022-01-01'),
+            sales_range_2022 FOR VALUES FROM ('2022-01-01') TO ('2023-01-01')
+
+\d+ sales_range_2021
+                                      Table "public.sales_range_2021"
+  Column   |  Type   | Collation | Nullable | Default | Storage | Compression | Stats target | Description 
+-----------+---------+-----------+----------+---------+---------+-------------+--------------+-------------
+ sale_id   | integer |           | not null |         | plain   |             |              | 
+ sale_date | date    |           | not null |         | plain   |             |              | 
+ amount    | numeric |           |          |         | main    |             |              | 
+Partition of: sales_range FOR VALUES FROM ('2021-01-01') TO ('2022-01-01')
+Partition constraint: ((sale_date IS NOT NULL) AND (sale_date >= '2021-01-01'::date) AND (sale_date < '2022-01-01'::date))
+Indexes:
+    "sales_range_2021_pkey" PRIMARY KEY, btree (sale_id, sale_date)
+Access method: heap
+
+\d+ sales_range_2022
+                                      Table "public.sales_range_2022"
+  Column   |  Type   | Collation | Nullable | Default | Storage | Compression | Stats target | Description 
+-----------+---------+-----------+----------+---------+---------+-------------+--------------+-------------
+ sale_id   | integer |           | not null |         | plain   |             |              | 
+ sale_date | date    |           | not null |         | plain   |             |              | 
+ amount    | numeric |           |          |         | main    |             |              | 
+Partition of: sales_range FOR VALUES FROM ('2022-01-01') TO ('2023-01-01')
+Partition constraint: ((sale_date IS NOT NULL) AND (sale_date >= '2022-01-01'::date) AND (sale_date < '2023-01-01'::date))
+Indexes:
+    "sales_range_2022_pkey" PRIMARY KEY, btree (sale_id, sale_date)
+Access method: heap
+
+\d+ sales_range_2023
+Did not find any relation named "sales_range_2023".
+\d+ revenue_range
+                                 Partitioned table "public.revenue_range"
+  Column  |  Type   | Collation | Nullable | Default | Storage | Compression | Stats target | Description 
+----------+---------+-----------+----------+---------+---------+-------------+--------------+-------------
+ rev_id   | integer |           | not null |         | plain   |             |              | 
+ rev_date | date    |           | not null |         | plain   |             |              | 
+ revenue  | numeric |           |          |         | main    |             |              | 
+Partition key: RANGE (rev_date)
+Indexes:
+    "revenue_range_pkey" PRIMARY KEY, btree (rev_id, rev_date)
+Partitions: revenue_range_2021 FOR VALUES FROM ('2021-01-01') TO ('2022-01-01'),
+            revenue_range_2022 FOR VALUES FROM ('2022-01-01') TO ('2023-01-01'),
+            revenue_range_2023 FOR VALUES FROM ('2023-01-01') TO ('2024-01-01')
+
+\d+ revenue_range_2021
+                                    Table "public.revenue_range_2021"
+  Column  |  Type   | Collation | Nullable | Default | Storage | Compression | Stats target | Description 
+----------+---------+-----------+----------+---------+---------+-------------+--------------+-------------
+ rev_id   | integer |           | not null |         | plain   |             |              | 
+ rev_date | date    |           | not null |         | plain   |             |              | 
+ revenue  | numeric |           |          |         | main    |             |              | 
+Partition of: revenue_range FOR VALUES FROM ('2021-01-01') TO ('2022-01-01')
+Partition constraint: ((rev_date IS NOT NULL) AND (rev_date >= '2021-01-01'::date) AND (rev_date < '2022-01-01'::date))
+Indexes:
+    "revenue_range_2021_pkey" PRIMARY KEY, btree (rev_id, rev_date)
+Access method: heap
+
+\d+ revenue_range_2022
+                                    Table "public.revenue_range_2022"
+  Column  |  Type   | Collation | Nullable | Default | Storage | Compression | Stats target | Description 
+----------+---------+-----------+----------+---------+---------+-------------+--------------+-------------
+ rev_id   | integer |           | not null |         | plain   |             |              | 
+ rev_date | date    |           | not null |         | plain   |             |              | 
+ revenue  | numeric |           |          |         | main    |             |              | 
+Partition of: revenue_range FOR VALUES FROM ('2022-01-01') TO ('2023-01-01')
+Partition constraint: ((rev_date IS NOT NULL) AND (rev_date >= '2022-01-01'::date) AND (rev_date < '2023-01-01'::date))
+Indexes:
+    "revenue_range_2022_pkey" PRIMARY KEY, btree (rev_id, rev_date)
+Access method: heap
+
+\d orders_range
+        Partitioned table "public.orders_range"
+   Column    |  Type   | Collation | Nullable | Default 
+-------------+---------+-----------+----------+---------
+ order_id    | integer |           | not null | 
+ order_date  | date    |           | not null | 
+ customer_id | integer |           |          | 
+ total       | numeric |           |          | 
+Partition key: RANGE (order_date)
+Indexes:
+    "orders_range_pkey" PRIMARY KEY, btree (order_id, order_date)
+Number of partitions: 2 (Use \d+ to list them.)
+
+\d+ orders_range
+                                   Partitioned table "public.orders_range"
+   Column    |  Type   | Collation | Nullable | Default | Storage | Compression | Stats target | Description 
+-------------+---------+-----------+----------+---------+---------+-------------+--------------+-------------
+ order_id    | integer |           | not null |         | plain   |             |              | 
+ order_date  | date    |           | not null |         | plain   |             |              | 
+ customer_id | integer |           |          |         | plain   |             |              | 
+ total       | numeric |           |          |         | main    |             |              | 
+Partition key: RANGE (order_date)
+Indexes:
+    "orders_range_pkey" PRIMARY KEY, btree (order_id, order_date)
+Partitions: orders_range_2021 FOR VALUES FROM ('2021-01-01') TO ('2022-01-01'),
+            orders_range_2022 FOR VALUES FROM ('2022-01-01') TO ('2023-01-01')
+
+\d+ orders_range_2021
+                                      Table "public.orders_range_2021"
+   Column    |  Type   | Collation | Nullable | Default | Storage | Compression | Stats target | Description 
+-------------+---------+-----------+----------+---------+---------+-------------+--------------+-------------
+ order_id    | integer |           | not null |         | plain   |             |              | 
+ order_date  | date    |           | not null |         | plain   |             |              | 
+ customer_id | integer |           |          |         | plain   |             |              | 
+ total       | numeric |           |          |         | main    |             |              | 
+Partition of: orders_range FOR VALUES FROM ('2021-01-01') TO ('2022-01-01')
+Partition constraint: ((order_date IS NOT NULL) AND (order_date >= '2021-01-01'::date) AND (order_date < '2022-01-01'::date))
+Indexes:
+    "orders_range_2021_pkey" PRIMARY KEY, btree (order_id, order_date)
+Access method: heap
+
+\d+ orders_range_2022
+                                      Table "public.orders_range_2022"
+   Column    |  Type   | Collation | Nullable | Default | Storage | Compression | Stats target | Description 
+-------------+---------+-----------+----------+---------+---------+-------------+--------------+-------------
+ order_id    | integer |           | not null |         | plain   |             |              | 
+ order_date  | date    |           | not null |         | plain   |             |              | 
+ customer_id | integer |           |          |         | plain   |             |              | 
+ total       | numeric |           |          |         | main    |             |              | 
+Partition of: orders_range FOR VALUES FROM ('2022-01-01') TO ('2023-01-01')
+Partition constraint: ((order_date IS NOT NULL) AND (order_date >= '2022-01-01'::date) AND (order_date < '2023-01-01'::date))
+Indexes:
+    "orders_range_2022_pkey" PRIMARY KEY, btree (order_id, order_date)
+Access method: heap
+
+\d+ inventory_range
+                                  Partitioned table "public.inventory_range"
+    Column    |  Type   | Collation | Nullable | Default | Storage | Compression | Stats target | Description 
+--------------+---------+-----------+----------+---------+---------+-------------+--------------+-------------
+ product_id   | integer |           | not null |         | plain   |             |              | 
+ product_date | date    |           | not null |         | plain   |             |              | 
+ quantity     | bigint  |           |          |         | plain   |             |              | 
+ price        | numeric |           |          |         | main    |             |              | 
+Partition key: RANGE (product_date)
+Indexes:
+    "inventory_range_pkey" PRIMARY KEY, btree (product_id, product_date)
+Partitions: inventory_range_2021 FOR VALUES FROM ('2021-01-01') TO ('2022-01-01'),
+            inventory_standalone FOR VALUES FROM ('2023-01-01') TO ('2024-01-01'),
+            inventory_range_default DEFAULT
+
+\d+ inventory_range_2021
+                                     Table "public.inventory_range_2021"
+    Column    |  Type   | Collation | Nullable | Default | Storage | Compression | Stats target | Description 
+--------------+---------+-----------+----------+---------+---------+-------------+--------------+-------------
+ product_id   | integer |           | not null |         | plain   |             |              | 
+ product_date | date    |           | not null |         | plain   |             |              | 
+ quantity     | bigint  |           |          |         | plain   |             |              | 
+ price        | numeric |           |          |         | main    |             |              | 
+Partition of: inventory_range FOR VALUES FROM ('2021-01-01') TO ('2022-01-01')
+Partition constraint: ((product_date IS NOT NULL) AND (product_date >= '2021-01-01'::date) AND (product_date < '2022-01-01'::date))
+Indexes:
+    "inventory_range_2021_pkey" PRIMARY KEY, btree (product_id, product_date)
+Check constraints:
+    "chk_quantity" CHECK (quantity >= 0)
+Access method: heap
+
+\d+ inventory_range_default
+                                    Table "public.inventory_range_default"
+    Column    |  Type   | Collation | Nullable | Default | Storage | Compression | Stats target | Description 
+--------------+---------+-----------+----------+---------+---------+-------------+--------------+-------------
+ product_id   | integer |           | not null |         | plain   |             |              | 
+ product_date | date    |           | not null |         | plain   |             |              | 
+ quantity     | bigint  |           |          |         | plain   |             |              | 
+ price        | numeric |           |          |         | main    |             |              | 
+Partition of: inventory_range DEFAULT
+Partition constraint: (NOT ((product_date IS NOT NULL) AND (((product_date >= '2021-01-01'::date) AND (product_date < '2022-01-01'::date)) OR ((product_date >= '2023-01-01'::date) AND (product_date < '2024-01-01'::date)))))
+Indexes:
+    "inventory_range_default_pkey" PRIMARY KEY, btree (product_id, product_date)
+Access method: heap
+
+\d+ inventory_standalone
+                                     Table "public.inventory_standalone"
+    Column    |  Type   | Collation | Nullable | Default | Storage | Compression | Stats target | Description 
+--------------+---------+-----------+----------+---------+---------+-------------+--------------+-------------
+ product_id   | integer |           | not null |         | plain   |             |              | 
+ product_date | date    |           | not null |         | plain   |             |              | 
+ quantity     | bigint  |           |          |         | plain   |             |              | 
+ price        | numeric |           |          |         | main    |             |              | 
+Partition of: inventory_range FOR VALUES FROM ('2023-01-01') TO ('2024-01-01')
+Partition constraint: ((product_date IS NOT NULL) AND (product_date >= '2023-01-01'::date) AND (product_date < '2024-01-01'::date))
+Indexes:
+    "inventory_standalone_pkey" PRIMARY KEY, btree (product_id, product_date)
+Access method: heap
+
+DROP TABLE sales_range CASCADE;
+NOTICE:  drop cascades to table sales_range_2022 membership in replication set default
+NOTICE:  drop cascades to table sales_range_2021 membership in replication set default
+NOTICE:  drop cascades to table sales_range membership in replication set default
+INFO:  DDL statement replicated.
+DROP TABLE
+DROP TABLE revenue_range CASCADE;
+NOTICE:  drop cascades to table revenue_range_2023 membership in replication set default
+NOTICE:  drop cascades to table revenue_range_2022 membership in replication set default_insert_only
+NOTICE:  drop cascades to table revenue_range_2021 membership in replication set default_insert_only
+NOTICE:  drop cascades to table revenue_range membership in replication set default
+INFO:  DDL statement replicated.
+DROP TABLE
+DROP TABLE orders_range CASCADE;
+NOTICE:  drop cascades to table orders_range_2022 membership in replication set default
+NOTICE:  drop cascades to table orders_range_2021 membership in replication set default
+NOTICE:  drop cascades to table orders_range membership in replication set default
+INFO:  DDL statement replicated.
+DROP TABLE
+DROP TABLE inventory_range CASCADE;
+NOTICE:  drop cascades to table inventory_standalone membership in replication set default_insert_only
+NOTICE:  drop cascades to table inventory_range_default membership in replication set default
+NOTICE:  drop cascades to table inventory_range_2021 membership in replication set default
+NOTICE:  drop cascades to table inventory_range membership in replication set default
+INFO:  DDL statement replicated.
+DROP TABLE
