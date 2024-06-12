@@ -572,7 +572,6 @@ DETAIL:  Failing row contains (1, Duplicate, Entry, duplicate@example.com, null,
 INSERT INTO employees (emp_id, first_name, last_name, email, salary) VALUES (3, 'Negative', 'Salary', 'negative@example.com', -5000); -- This should produce a check constraint violation error
 ERROR:  new row for relation "employees" violates check constraint "chk_salary"
 DETAIL:  Failing row contains (3, Negative, Salary, negative@example.com, null, null, -5000.00, t, null, null, null, null, null, null).
-
 -- Create a table to use the remaining data types 
 CREATE TABLE test_tab5 (
     bigint_col BIGINT PRIMARY KEY,
@@ -588,21 +587,44 @@ CREATE TABLE test_tab5 (
     tsvector_col TSVECTOR,
     xml_col XML
 );
-
+INFO:  DDL statement replicated.
+CREATE TABLE
 -- Insert initial data into test_tab5
 INSERT INTO test_tab5 (bigint_col, character_col, double_precision_col, jsonb_col, macaddr8_col, real_col, smallint_col, time_col, time_with_time_zone_col, tsquery_col, tsvector_col, xml_col) VALUES
 (9223372036854775807, 'char_test', 1.79769e+308, '{"key": "value"}', '08:00:2b:01:02:03:04:05', 3.40282e+38, 32767, '12:34:56', '12:34:56+02', 'fat & rat', 'a fat cat sat on a mat and ate a rat', '<root><child>value</child></root>');
-
+INSERT 0 1
 -- Insert another row into test_tab5
 INSERT INTO test_tab5 (bigint_col, character_col, double_precision_col, jsonb_col, macaddr8_col, real_col, smallint_col, time_col, time_with_time_zone_col, tsquery_col, tsvector_col, xml_col) VALUES
 (1234567890123456789, 'test_char', 2.22507e-308, '{"another_key": "another_value"}', '08:00:2b:06:07:08:09:0A', 1.17549e-38, -32768, '23:45:01', '23:45:01-05', 'quick & brown', 'the quick brown fox jumps over the lazy dog', '<root><child>another_value</child></root>');
-
+INSERT 0 1
 -- Update the existing row in test_tab5
 UPDATE test_tab5 SET character_col = 'upd_char', jsonb_col = '{"updated_key": "updated_value"}', real_col = 42.42 WHERE bigint_col = 9223372036854775807;
-
+UPDATE 1
 -- Validate the structure of the table
 \d test_tab5
+                             Table "public.test_tab5"
+         Column          |          Type          | Collation | Nullable | Default 
+-------------------------+------------------------+-----------+----------+---------
+ bigint_col              | bigint                 |           | not null | 
+ character_col           | character(10)          |           |          | 
+ double_precision_col    | double precision       |           |          | 
+ jsonb_col               | jsonb                  |           |          | 
+ macaddr8_col            | macaddr8               |           |          | 
+ real_col                | real                   |           |          | 
+ smallint_col            | smallint               |           |          | 
+ time_col                | time without time zone |           |          | 
+ time_with_time_zone_col | time with time zone    |           |          | 
+ tsquery_col             | tsquery                |           |          | 
+ tsvector_col            | tsvector               |           |          | 
+ xml_col                 | xml                    |           |          | 
+Indexes:
+    "test_tab5_pkey" PRIMARY KEY, btree (bigint_col)
+
 EXECUTE spocktab('test_tab5'); -- default repset expected
+ nspname |  relname  | set_name 
+---------+-----------+----------
+ public  | test_tab5 | default
+(1 row)
 
 -- Final validation of all tables along with querying the spock.tables
 \d+ employees
@@ -827,7 +849,30 @@ EXECUTE spocktab('test_tab4');
 (1 row)
 
 \d+ test_tab5
+                                                        Table "public.test_tab5"
+         Column          |          Type          | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+-------------------------+------------------------+-----------+----------+---------+----------+-------------+--------------+-------------
+ bigint_col              | bigint                 |           | not null |         | plain    |             |              | 
+ character_col           | character(10)          |           |          |         | extended |             |              | 
+ double_precision_col    | double precision       |           |          |         | plain    |             |              | 
+ jsonb_col               | jsonb                  |           |          |         | extended |             |              | 
+ macaddr8_col            | macaddr8               |           |          |         | plain    |             |              | 
+ real_col                | real                   |           |          |         | plain    |             |              | 
+ smallint_col            | smallint               |           |          |         | plain    |             |              | 
+ time_col                | time without time zone |           |          |         | plain    |             |              | 
+ time_with_time_zone_col | time with time zone    |           |          |         | plain    |             |              | 
+ tsquery_col             | tsquery                |           |          |         | plain    |             |              | 
+ tsvector_col            | tsvector               |           |          |         | extended |             |              | 
+ xml_col                 | xml                    |           |          |         | extended |             |              | 
+Indexes:
+    "test_tab5_pkey" PRIMARY KEY, btree (bigint_col)
+Access method: heap
+
 EXECUTE spocktab('test_tab5');
+ nspname |  relname  | set_name 
+---------+-----------+----------
+ public  | test_tab5 | default
+(1 row)
 
 -- Validating data in all tables
 SELECT * FROM employees ORDER BY emp_id;
@@ -901,3 +946,9 @@ SELECT * FROM test_tab4 ORDER BY id;
 (1 row)
 
 SELECT * FROM test_tab5 ORDER BY 1;
+     bigint_col      | character_col | double_precision_col |            jsonb_col             |      macaddr8_col       |  real_col   | smallint_col | time_col | time_with_time_zone_col |    tsquery_col    |                      tsvector_col                       |                  xml_col                  
+---------------------+---------------+----------------------+----------------------------------+-------------------------+-------------+--------------+----------+-------------------------+-------------------+---------------------------------------------------------+-------------------------------------------
+ 1234567890123456789 | test_char     |         2.22507e-308 | {"another_key": "another_value"} | 08:00:2b:06:07:08:09:0a | 1.17549e-38 |       -32768 | 23:45:01 | 23:45:01-05             | 'quick' & 'brown' | 'brown' 'dog' 'fox' 'jumps' 'lazy' 'over' 'quick' 'the' | <root><child>another_value</child></root>
+ 9223372036854775807 | upd_char      |         1.79769e+308 | {"updated_key": "updated_value"} | 08:00:2b:01:02:03:04:05 |       42.42 |        32767 | 12:34:56 | 12:34:56+02             | 'fat' & 'rat'     | 'a' 'and' 'ate' 'cat' 'fat' 'mat' 'on' 'rat' 'sat'      | <root><child>value</child></root>
+(2 rows)
+

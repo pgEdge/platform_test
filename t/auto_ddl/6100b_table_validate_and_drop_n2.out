@@ -227,7 +227,30 @@ EXECUTE spocktab('test_tab4');
 (1 row)
 
 \d+ test_tab5
+                                                        Table "public.test_tab5"
+         Column          |          Type          | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+-------------------------+------------------------+-----------+----------+---------+----------+-------------+--------------+-------------
+ bigint_col              | bigint                 |           | not null |         | plain    |             |              | 
+ character_col           | character(10)          |           |          |         | extended |             |              | 
+ double_precision_col    | double precision       |           |          |         | plain    |             |              | 
+ jsonb_col               | jsonb                  |           |          |         | extended |             |              | 
+ macaddr8_col            | macaddr8               |           |          |         | plain    |             |              | 
+ real_col                | real                   |           |          |         | plain    |             |              | 
+ smallint_col            | smallint               |           |          |         | plain    |             |              | 
+ time_col                | time without time zone |           |          |         | plain    |             |              | 
+ time_with_time_zone_col | time with time zone    |           |          |         | plain    |             |              | 
+ tsquery_col             | tsquery                |           |          |         | plain    |             |              | 
+ tsvector_col            | tsvector               |           |          |         | extended |             |              | 
+ xml_col                 | xml                    |           |          |         | extended |             |              | 
+Indexes:
+    "test_tab5_pkey" PRIMARY KEY, btree (bigint_col)
+Access method: heap
+
 EXECUTE spocktab('test_tab5');
+ nspname |  relname  | set_name 
+---------+-----------+----------
+ public  | test_tab5 | default
+(1 row)
 
 -- Validating data in all tables
 SELECT * FROM employees ORDER BY emp_id;
@@ -301,6 +324,11 @@ SELECT * FROM test_tab4 ORDER BY id;
 (1 row)
 
 SELECT * FROM test_tab5 ORDER BY 1;
+     bigint_col      | character_col | double_precision_col |            jsonb_col             |      macaddr8_col       |  real_col   | smallint_col | time_col | time_with_time_zone_col |    tsquery_col    |                      tsvector_col                       |                  xml_col                  
+---------------------+---------------+----------------------+----------------------------------+-------------------------+-------------+--------------+----------+-------------------------+-------------------+---------------------------------------------------------+-------------------------------------------
+ 1234567890123456789 | test_char     |         2.22507e-308 | {"another_key": "another_value"} | 08:00:2b:06:07:08:09:0a | 1.17549e-38 |       -32768 | 23:45:01 | 23:45:01-05             | 'quick' & 'brown' | 'brown' 'dog' 'fox' 'jumps' 'lazy' 'over' 'quick' 'the' | <root><child>another_value</child></root>
+ 9223372036854775807 | upd_char      |         1.79769e+308 | {"updated_key": "updated_value"} | 08:00:2b:01:02:03:04:05 |       42.42 |        32767 | 12:34:56 | 12:34:56+02             | 'fat' & 'rat'     | 'a' 'and' 'ate' 'cat' 'fat' 'mat' 'on' 'rat' 'sat'      | <root><child>value</child></root>
+(2 rows)
 
 -- Execute drop statements on n2 to exercise DROP TABLE, ensuring it gets replicated.
 -- This also helps with the cleanup
@@ -347,3 +375,6 @@ NOTICE:  drop cascades to table test_tab4 membership in replication set default_
 INFO:  DDL statement replicated.
 DROP TABLE
 drop table test_tab5;
+NOTICE:  drop cascades to table test_tab5 membership in replication set default
+INFO:  DDL statement replicated.
+DROP TABLE
