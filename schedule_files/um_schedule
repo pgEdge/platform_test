@@ -6,4 +6,4 @@ t/um1_install_available_components.py
 #t/um_update_available_components.py
 #t/um_remove_available_components.py
 
-t/9998_remove_pgedge.py
+t/9998_remove_nc_and_pgpass_dirs.py

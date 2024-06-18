@@ -14,5 +14,5 @@ t/service_enable_error.pl
 
 t/399_um_breakdown_script.pl
 
-# Uncomment 9998X.py to delete the nc directory, etc.
-#t/9998_remove_pgedge.py
+# 9998X.py to deletes the nc and pgpass directory, etc.
+t/9998_remove_nc_and_pgpass_dirs.py
