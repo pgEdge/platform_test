@@ -31,5 +31,4 @@ t/northwind-remove_invalid_dbname.py
 ##Teardown Scripts
 t/8998_env_remove_pgedge_node1.pl
 t/8999_env_remove_pgedge_node2.pl
-t/9998_remove_pgedge.py
-
+t/9998_remove_nc_and_pgpass_dirs.py
