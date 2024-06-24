@@ -20,6 +20,8 @@ repset=os.getenv("EDGE_REPSET","demo-repset")
 spockpath=os.getenv("EDGE_SPOCK_PATH")
 dbname=os.getenv("EDGE_DB","lcdb")
 
+cwd=os.getcwd()
+
 
 #print("*"*100)
 
@@ -31,10 +33,10 @@ print(f"res = {res}\n")
 
 new_address_0 = '127.0.0.1'
 new_address_1 = '127.0.0.1'
-new_port_0 = '6435'
-new_port_1 = '6437'
-new_path_0 = 'one'
-new_path_1 = 'two'
+new_port_0 = port
+new_port_1 = port + 1
+new_path_0 = (f"{cwd}/{cluster_dir}/n1")
+new_path_1 = (f"{cwd}/{cluster_dir}/n2")
 
 
 with open(f"{cluster_dir}/{cluster_name}.json", 'r') as file:
