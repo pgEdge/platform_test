@@ -30,7 +30,7 @@ print("The port number is $ENV{EDGE_START_PORT}\n");
 ## Check for n1 node existence
 
 my $json3 = `$homedir1/$ENV{EDGE_CLI} spock node-list  $ENV{EDGE_DB}`;
-   #print("my json3 = $json3");
+   print("my json3 = $json3");
 my $out3 = decode_json($json3);
   $ENV{EDGE_NODE1_NAME} = $out3->[0]->{"node_name"};
    print("The node_name is = $ENV{EDGE_NODE1_NAME}\n");
