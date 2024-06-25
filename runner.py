@@ -4,6 +4,7 @@ import getopt, sys, re
 import subprocess, os
 import filecmp , shutil , difflib
 from datetime import datetime
+import socket
 
 global glDebug
 glDebug = False
@@ -72,9 +73,10 @@ def expandSchedule(scheduleFileName):
 
 def parseCmdLine():
 
-    opts, args = getopt.getopt(sys.argv[1:], "s:t:vdh", ["schedule=", "test=", "version", "debug", "help"])
+    opts, args = getopt.getopt(sys.argv[1:], "s:t:vdkh", ["schedule=", "test=", "version", "debug", "skip_port_check", "help"])
                   
     tests = []
+    skip_port_check = False  # Initialize the skip_port_check flag
 
     for opt, val in opts:
         if opt in["-s", "--schedule"]:
@@ -89,17 +91,25 @@ def parseCmdLine():
         elif opt in ["-d", "--debug"]:
             global glDebug
             glDebug = True
-            
+
+        elif opt in ["-k", "--skip_port_check"]:
+            skip_port_check = True  # Set the flag to skip port check
+    
         elif opt in ["-h", "--help"]:
             print("Usage: " + sys.argv[0] + "  [option] ...")
             print("")
             print(" -s scheduleFileName : execute tests listed in given scheduleFileName")
             print(" -t testFileName     : execute the given test script")
+            print(" -k, --skip_port_check : skip checking if required pg ports are free")
             print(" -v                  : displays version number")
             print(" -h                  : display this usafe information")
             print(" -d                  : print extra information useful for debugging")
             sys.exit(0)
-            
+
+    # Check for required ports unless skipping is specified
+    if not skip_port_check:
+        check_pg_ports()
+        
     # Now create a log file - the name of the log file is based on the
     # current date and time
             
@@ -348,6 +358,30 @@ def prepareOutputDirectory(directory):
         shutil.rmtree(directory)  # Removes the directory and all its contents
     # Recreate the directory
     os.makedirs(directory)
+
+################################################################################
+# check_pg_ports()
+#
+# Checks if the specified PostgreSQL ports (n1port, n1port + 1, n1port + 2) are free.
+# Exits with an error message if any ports are occupied.
+# Called by default unless -k or --skip_port_check is specified at command line.
+################################################################################
+def check_pg_ports():
+    ports_to_check = [n1port, n1port + 1, n1port + 2]
+    unavailable_ports = []
+
+    for port in ports_to_check:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            result = sock.connect_ex((pghost, port))
+            if result == 0:
+                unavailable_ports.append(port)
+    
+    if unavailable_ports:
+        print(f"Error: The following ports are not free: {', '.join(map(str, unavailable_ports))}")
+        print("Please free up the ports and try again.")
+        exit(1)  # Exit the program with an error code
+    else:
+        print(f"All required ports ({', '.join(map(str, ports_to_check))}) are free.")
 
 ################################################################################
 # main()
