@@ -49,6 +49,9 @@ for n in range(1,num_nodes+1):
 
     print(f"Added tables to repset on n{n}")
 
+    #DROP my_table if exists
+    row = util_test.write_psql("DROP TABLE IF EXISTS my_table CASCADE",host,dbname,port,pw,usr)
+
     port = port + 1
 
 util_test.exit_message(f"Pass - {os.path.basename(__file__)}", 0)
