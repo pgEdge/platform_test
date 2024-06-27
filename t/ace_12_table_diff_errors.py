@@ -17,7 +17,7 @@ res=util_test.run_cmd("non-existent cluster name", cmd_node, f"{home_dir}")
 print(res)
 if res.returncode == 0 or "cluster not found" not in res.stdout:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - cluster not found", 1) 
-print("*" * 100) 
+print("*" * 100)
 
 # Non-Existent Table Name
 cmd_node = f"ace table-diff {cluster} public.fo"
@@ -25,9 +25,15 @@ res=util_test.run_cmd("misspelled table name", cmd_node, f"{home_dir}")
 print(res)
 if res.returncode == 0 or "Invalid table name 'public.fo'" not in res.stdout:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Invalid Table", 1) 
-print("*" * 100) 
+print("*" * 100)
 
 # Non-Existent Schema Name
+cmd_node = f"ace table-diff {cluster} pablic.foo"
+res=util_test.run_cmd("misspelled table name", cmd_node, f"{home_dir}")
+print(res)
+if res.returncode == 0 or "Invalid table name 'pablic.foo'" not in res.stdout:
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Invalid Table", 1) 
+print("*" * 100)
 
 # Non Existent Database Name
 cmd_node = f"ace table-diff {cluster} public.foo --dbname=not_real"
@@ -41,9 +47,9 @@ print("*" * 100)
 cmd_node = f"ace table-diff {cluster} public.foo --block_rows=999"
 res=util_test.run_cmd("block_rows < 1000", cmd_node, f"{home_dir}")
 print(res)
-if res.returncode == 0 or "Desired block row size is < 1000" not in res.stdout:
+if res.returncode == 0 or "Block row size should be >= 1000" not in res.stdout:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Block Rows", 1) 
-print("*" * 100)  
+print("*" * 100)
     
 # Max CPU ratio > 1
 cmd_node = f"ace table-diff {cluster} public.foo --max_cpu_ratio=2"
@@ -59,7 +65,7 @@ res=util_test.run_cmd("invalid_cpu_ratio", cmd_node, f"{home_dir}")
 print(res)
 if res.returncode == 0 or "Invalid values for ACE_MAX_CPU_RATIO" not in res.stdout:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Max CPU Ratio", 1) 
-print("*" * 100)  
+print("*" * 100)
     
 # Unsupported Output Format
 cmd_node = f"ace table-diff {cluster} public.foo --output=html"

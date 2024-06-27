@@ -28,8 +28,6 @@ if res.returncode == 0 or "Repset not_real not found" not in res.stdout:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Invalid Repset", 1)
 print("*" * 100)
 
-# Non-Existent Schema Name
-
 # Non Existent Database Name
 cmd_node = f"ace repset-diff {cluster} {repset} --dbname=not_real"
 res=util_test.run_cmd("non-existent database name", cmd_node, f"{home_dir}")
@@ -42,7 +40,7 @@ print("*" * 100)
 cmd_node = f"ace repset-diff {cluster} {repset} --block_rows=999"
 res=util_test.run_cmd("block_rows < 1000", cmd_node, f"{home_dir}")
 print(res)
-if res.returncode == 0 or "Desired block row size is < 1000" not in res.stdout:
+if res.returncode == 0 or "Block row size should be >= 1000" not in res.stdout:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Block Rows", 1)
 print("*" * 100)
 
