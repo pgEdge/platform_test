@@ -18,11 +18,9 @@ cluster_dir = os.getenv("EDGE_CLUSTER_DIR")
 
 ## Assumes that basic environment is already set up as by
 """
-t/020_nodectl_install_pgedge.pl
-t/8000a_env_setup_pgedge_node1.pl
-t/8001a_env_setup_pgedge_node2.pl
-t/8000b_install_pgedge_node1.pl
-t/8001b_install_pgedge_node2.pl
+t/setup_01_install.py
+t/setup_02_nodecreate.py
+t/setup_03_noderun.py
 """
 
 

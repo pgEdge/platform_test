@@ -245,12 +245,12 @@ t/8087_env_node_drop_n2.pl
 
 # Set up for the next round of tests
 
-## Test Spock Module
-t/spock_1_setup.py
-t/spock_2_node_create.py
-t/spock_3_sub_create.py
-t/spock_4_repset_add_table.py
-t/spock_5_cofirm_replication.py
+## Test Spock Module (currently tested in ace-test)
+# t/spock_1_setup.py
+# t/spock_2_node_create.py
+# t/spock_3_sub_create.py
+# t/spock_4_repset_add_table.py
+# t/spock_5_cofirm_replication.py
 
 ## Test Ace Module
 t/cluster_1_gen_json.py
