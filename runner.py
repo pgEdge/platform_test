@@ -12,36 +12,44 @@ glDebug = False
 global glLogger
 glLogger = ""
 
-# Global configuration variables for SQL execution through psql
-homedir = os.getenv("EDGE_CLUSTER_DIR")
-pgversion = os.getenv("EDGE_COMPONENT", "pg16")
-n1dirbin = f"{homedir}/n1/pgedge/{pgversion}/bin/"
-n1port = int(os.getenv("EDGE_START_PORT", 6432))
-n2port = n1port + 1
-pgdb = os.getenv("EDGE_DB")
-pguser = os.getenv("EDGE_USERNAME")
-pgpassword = os.getenv("EDGE_PASSWORD")
-pghost = os.getenv("EDGE_HOST")
-actualOutDir = "/tmp/auto_ddl/"
-
-# Construct the path to the psql binary, using n1's psql for executing sql files (for both n1/n2)
-# The psql from path below will be passed appropriate switches/input/output files
-# in the build_psql_command function.
-psqlPath = f"{n1dirbin}psql"
-
-
 ################################################################################
-#  runners{}
+# initialize_pg_config()
 #
-#  This dictionary maps a file extension (such as .py or .pl) to the name of
-#  an interpeter that can execute the indicated type of script
+# Load global configuration variables.
+# These variables were previously defined globally but are now moved to this function
+# to ensure they are loaded after the environment variables from the passed config file are read. 
+################################################################################
 
-runners = {
-    ".py": "/usr/bin/python",
-    ".pl": "/usr/bin/perl",
-    ".sh": "bash %f",
-    ".sql": psqlPath  # Newly added support for .sql file, and its runner psql command path for SQL file execution
-}
+def initialize_pg_config():
+    global homedir, pgversion, n1dirbin, n1port, n2port, pgdb, pguser, pgpassword, pghost, actualOutDir, psqlPath
+    
+    homedir = os.getenv("EDGE_CLUSTER_DIR")
+    pgversion = os.getenv("EDGE_COMPONENT", "pg16")
+    n1dirbin = f"{homedir}/n1/pgedge/{pgversion}/bin/"
+    n1port = int(os.getenv("EDGE_START_PORT", 6432))
+    n2port = n1port + 1
+    pgdb = os.getenv("EDGE_DB")
+    pguser = os.getenv("EDGE_USERNAME")
+    pgpassword = os.getenv("EDGE_PASSWORD")
+    pghost = os.getenv("EDGE_HOST", "localhost")
+    actualOutDir = os.getenv("EDGE_ACTUAL_OUT_DIR", "/tmp/auto_ddl/")
+    
+    # Construct the path to the psql binary, using n1's psql for executing sql files (for both n1/n2)
+    # The psql from path below will be passed appropriate switches/input/output files
+    # in the build_psql_command function.
+    psqlPath = f"{n1dirbin}psql"
+    
+    #  runners{}
+    #
+    #  This dictionary maps a file extension (such as .py or .pl) to the name of
+    #  an interpeter that can execute the indicated type of script
+    global runners
+    runners = {
+        ".py": "/usr/bin/python",
+        ".pl": "/usr/bin/perl",
+        ".sh": "bash %f",
+        ".sql": psqlPath  # Newly added support for .sql file, and its runner psql command path for SQL file execution
+    }
 
 
 ################################################################################
@@ -73,10 +81,11 @@ def expandSchedule(scheduleFileName):
 
 def parseCmdLine():
 
-    opts, args = getopt.getopt(sys.argv[1:], "s:t:vdkh", ["schedule=", "test=", "version", "debug", "skip_port_check", "help"])
-                  
+    opts, args = getopt.getopt(sys.argv[1:], "s:t:vdkhc:", ["schedule=", "test=", "version", "debug", "skip_port_check", "config=", "help"])
+              
     tests = []
     skip_port_check = False  # Initialize the skip_port_check flag
+    config_file = None  # Initialize the config_file variable
 
     for opt, val in opts:
         if opt in["-s", "--schedule"]:
@@ -94,22 +103,34 @@ def parseCmdLine():
 
         elif opt in ["-k", "--skip_port_check"]:
             skip_port_check = True  # Set the flag to skip port check
+        
+        elif opt in ["-c", "--config"]:
+            config_file = val  # Set the config_file variable
     
         elif opt in ["-h", "--help"]:
             print("Usage: " + sys.argv[0] + "  [option] ...")
             print("")
-            print(" -s scheduleFileName : execute tests listed in given scheduleFileName")
-            print(" -t testFileName     : execute the given test script")
+            print(" -s scheduleFileName   : execute tests listed in given scheduleFileName")
+            print(" -t testFileName       : execute the given test script")
             print(" -k, --skip_port_check : skip checking if required pg ports are free")
-            print(" -v                  : displays version number")
-            print(" -h                  : display this usafe information")
-            print(" -d                  : print extra information useful for debugging")
+            print(" -c configFileName     : specify configuration file to source")
+            print(" -v                    : displays version number")
+            print(" -h                    : display this usafe information")
+            print(" -d                    : print extra information useful for debugging")
             sys.exit(0)
+
+    # If config file is specified, source it. The scope of this would be limited to the current
+    # runner.py process and its sub-processes (individual tests).
+    if config_file:
+        source_config_file(config_file)
+
+    # Initialize PostgreSQL configuration variables after sourcing the config file
+    initialize_pg_config()
 
     # Check for required ports unless skipping is specified
     if not skip_port_check:
         check_pg_ports()
-        
+
     # Now create a log file - the name of the log file is based on the
     # current date and time
             
@@ -300,7 +321,6 @@ def build_psql_command(sql_file):
     # Assume the expected output file is in the same location as the sql_file, but with a .out extension
     expected_output_file = sql_file.replace('.sql', '.out')
 
-    
     # Construct the full psql command using the database parameters and file paths
     psql_command = f"{psql_command_path} -X -a -d {pgdb} -p {port} -h {pghost} < {sql_file} > {actual_output_file} 2>&1"
     
@@ -378,11 +398,55 @@ def check_pg_ports():
     
     if unavailable_ports:
         print(f"Error: The following ports are not free: {', '.join(map(str, unavailable_ports))}")
-        print("Please free up the ports and try again.")
+        print("Please free up the ports OR use -k switch to ignore ports availability check.")
         exit(1)  # Exit the program with an error code
     else:
         print(f"All required ports ({', '.join(map(str, ports_to_check))}) are free.")
 
+################################################################################
+# source_config_file(config_file)
+#
+# Sources the given configuration file.
+# Exits with an error message if the file does not exist or sourcing fails.
+# Sets environment variables in the current process.
+################################################################################
+def source_config_file(config_file):
+    # Check if the config file exists
+    if not os.path.isfile(config_file):
+        print(f"Error: The configuration file '{config_file}' does not exist.")
+        exit(1)  # Exit the program with an error code
+
+    # Read, format and set environment variables from the config file that are in a bash supported format
+    # So stripping various things from it to get us the key, value pairs to load in os.environ[key] = value
+    try:
+        with open(config_file, 'r') as file:
+            for line in file:
+                # Ignore empty lines and comments
+               if line.strip() and not line.startswith('#'):
+                    # Remove leading and trailing whitespace
+                    line = line.strip()
+                    # Remove 'export ' from the line
+                    line = line.replace('export ', '')
+                    # Split the line into key and value at the first '='
+                    key, value = line.split('=', 1)
+                    # Remove double quotes if present, e.g. remove quotes around demo in export EDGE_CLUSTER="demo"
+                    value = value.strip('"')
+                    # Resolve any embedded environment variables e.g. resolve $NC_DIR embedded in EDGE_HOME_DIR="$NC_DIR/pgedge"
+                    value = os.path.expandvars(value)
+                    # Set the environment variable
+                    os.environ[key] = value
+        print(f"Configuration file '{config_file}' sourced successfully.")
+        # print the list of all environment variables starting with EDGE in debug mode
+        if glDebug:
+            print("Environment Variables:")
+            for key, value in os.environ.items():
+                if key.startswith("EDGE"):
+                    print(f"{key} = {value}")
+    except Exception as e:
+        print(f"Error: Failed to source the configuration file '{config_file}'.")
+        print(f"Exception: {e}")
+        exit(1)  # Exit the program with an error code
+    
 ################################################################################
 # main()
 #
@@ -391,11 +455,12 @@ def check_pg_ports():
 #  up by printing a summary of the test run (pass count, fail count, error count)
 
 def main():
-    # Prepare the output directory (for autoddl tests) to ensure it's empty and ready for new outputs
-    prepareOutputDirectory(actualOutDir)
 
     testList = parseCmdLine()
 
+    # Prepare the output directory (for autoddl tests) to ensure it's empty and ready for new outputs
+    prepareOutputDirectory(actualOutDir)
+    
     global glDebug
     
     if glDebug:
