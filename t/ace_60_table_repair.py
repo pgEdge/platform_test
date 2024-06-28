@@ -26,7 +26,7 @@ diff_file_local, diff_data = util_test.get_diff_data(res.stdout)
 # Calls table repair on the above to fix the data, using n1 as the source of truth
 cmd_node = f"ace table-repair {cluster} {diff_file_local} n1 public.foo_diff_data"
 res=util_test.run_cmd("table-repair", cmd_node, f"{home_dir}")
-print(res)
+util_test.printres(res)
 if res.returncode == 1 or f"Successfully applied diffs to public.foo_diff_data in cluster {cluster}" not in res.stdout:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Table Repair", 1)
 print("*" * 100)
@@ -34,7 +34,7 @@ print("*" * 100)
 # Calls table diff again to see that there should be no differences
 cmd_node = f"ace table-diff {cluster} public.foo_diff_data"
 res=util_test.run_cmd("table-diff", cmd_node, f"{home_dir}")
-print(res)
+util_test.printres(res)
 if res.returncode == 1 or "TABLES MATCH OK" not in res.stdout:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Matching Diff by Repair", 1)
 print("*" * 100)

@@ -21,7 +21,7 @@ diff_file_local, diff_data = util_test.get_diff_data(res.stdout)
 # Non-Existent Cluster Name
 cmd_node = f"ace table-rerun notreal {diff_file_local} public.foo_diff_data"
 res=util_test.run_cmd("table-rerun", cmd_node, f"{home_dir}")
-print(res)
+util_test.printres(res)
 if res.returncode == 0 or "cluster not found" not in res.stdout:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Wrong Cluster Name", 1) 
 print("*" * 100)
@@ -29,7 +29,7 @@ print("*" * 100)
 # Non-Existent Diff File
 cmd_node = f"ace table-rerun {cluster} notreal.json public.foo_diff_data"
 res=util_test.run_cmd("table-rerun", cmd_node, f"{home_dir}")
-print(res)
+util_test.printres(res)
 if res.returncode == 0 or "Diff file notreal.json not found" not in res.stdout:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Wrong Cluster Name", 1) 
 print("*" * 100)
@@ -37,7 +37,7 @@ print("*" * 100)
 # Non-Existent Table Name
 cmd_node = f"ace table-rerun {cluster} {diff_file_local} public.foo_not_real"
 res=util_test.run_cmd("table-rerun", cmd_node, f"{home_dir}")
-print(res)
+util_test.printres(res)
 if res.returncode == 0 or "Invalid table name 'public.foo_not_real'" not in res.stdout:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Wrong Cluster Name", 1) 
 print("*" * 100)
@@ -45,7 +45,7 @@ print("*" * 100)
 # Non-Existent Database Name
 cmd_node = f"ace table-rerun {cluster} {diff_file_local} public.foo_diff_data --dbname=not_real"
 res=util_test.run_cmd("table-rerun", cmd_node, f"{home_dir}")
-print(res)
+util_test.printres(res)
 if res.returncode == 0 or "Database 'not_real' not found in cluster 'demo'" not in res.stdout:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Wrong Cluster Name", 1) 
 print("*" * 100)
@@ -66,7 +66,7 @@ if not os.path.exists(txt_path):
 
 cmd_node = f"ace table-rerun {cluster} {txt_local} public.foo_diff_data"
 res=util_test.run_cmd("table-rerun", cmd_node, f"{home_dir}")
-print(res)
+util_test.printres(res)
 if res.returncode == 0 or "Could not load diff file as JSON" not in res.stdout:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Wrong Cluster Name", 1) 
 print("*" * 100)
@@ -88,7 +88,7 @@ if not os.path.exists(json_path):
 
 cmd_node = f"ace table-rerun {cluster} {json_local} public.foo_diff_data"
 res=util_test.run_cmd("table-rerun", cmd_node, f"{home_dir}")
-print(res)
+util_test.printres(res)
 if res.returncode == 0 or "Contents of diff file improperly formatted" not in res.stdout:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Wrong Cluster Name", 1) 
 print("*" * 100)

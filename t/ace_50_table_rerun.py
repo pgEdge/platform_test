@@ -61,7 +61,7 @@ time.sleep(1)
 cmd_node = f"ace table-rerun {cluster} {diff_file_local} public.foo_diff_data"
 res=util_test.run_cmd("table-rerun", cmd_node, f"{home_dir}")
 diff_file_local_2, diff_data_2 = util_test.get_diff_data(res.stdout)
-print(res)
+util_test.printres(res)
 if res.returncode == 1 or "FOUND DIFFS BETWEEN NODES" not in res.stdout:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Non-Matching Rerun", 1)
 print("*" * 100)
@@ -81,7 +81,7 @@ time.sleep(1)
 # Run with now matching info
 cmd_node = f"ace table-rerun {cluster} {diff_file_local} public.foo_diff_data"
 res=util_test.run_cmd("table-rerun", cmd_node, f"{home_dir}")
-print(res)
+util_test.printres(res)
 if res.returncode == 1 or "TABLES MATCH OK" not in res.stdout:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Matching Rerun by Update", 1)
 print("*" * 100)
@@ -98,7 +98,7 @@ time.sleep(1)
 # Run with dropped row
 cmd_node = f"ace table-rerun {cluster} {diff_file_local} public.foo_diff_data"
 res=util_test.run_cmd("table-rerun", cmd_node, f"{home_dir}")
-print(res)
+util_test.printres(res)
 if res.returncode == 1 or "TABLES MATCH OK" not in res.stdout:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Matching Rerun by Delete", 1)
 print("*" * 100)
