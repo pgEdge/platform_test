@@ -241,3 +241,16 @@ def compare_structures(struct1, struct2) -> bool:
 
     else:
         return struct1 == struct2
+    
+# *****************************************************************************
+## Prints the result from a command run in a nicer format since its driving me crazy
+# *****************************************************************************
+
+def printres(res: subprocess.CompletedProcess[str]) -> None:
+    print(f"Command `{res.args}` ran with return code {res.returncode}")
+    print("stdout:")
+    for line in res.stdout.strip().split("\\n"):
+        print(f"\t{line.strip()}")
+    print("stderr:")
+    for line in res.stderr.strip().split("\\n"):
+        print(f"\t{line.strip()}")

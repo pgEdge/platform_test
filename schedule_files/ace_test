@@ -1,8 +1,6 @@
-t/020_nodectl_install_pgedge.pl
-t/8000a_env_setup_pgedge_node1.pl
-t/8001a_env_setup_pgedge_node2.pl
-t/8000b_install_pgedge_node1.pl
-t/8001b_install_pgedge_node2.pl
+t/setup_01_install.py
+t/setup_02_nodecreate.py
+t/setup_03_noderun.py
 
 t/spock_1_setup.py
 t/spock_2_node_create.py
@@ -27,6 +25,5 @@ t/ace_60_table_repair.py
 t/ace_61_table_repair_errors.py
 t/ace_99_cleanup.py
 
-t/8998_env_remove_pgedge_node1.pl
-t/8999_env_remove_pgedge_node2.pl
-t/9998_remove_pgedge.py
+t/cleanup_01_noderemove.py
+t/cleanup_02_pgremove.py
