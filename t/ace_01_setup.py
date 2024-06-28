@@ -1,4 +1,4 @@
-import sys, os, util_test,subprocess
+import sys, os, util_test, subprocess
 
 ## Print Script
 print(f"Starting - {os.path.basename(__file__)}")
@@ -13,6 +13,16 @@ pw=os.getenv("EDGE_PASSWORD","password")
 host=os.getenv("EDGE_HOST","localhost")
 dbname=os.getenv("EDGE_DB","lcdb")
 cluster_dir = os.getenv("EDGE_CLUSTER_DIR")
+
+## Creates data for all future ace tests
+
+## Assumes that basic environment is already set up as by
+"""
+t/setup_01_install.py
+t/setup_02_nodecreate.py
+t/setup_03_noderun.py
+"""
+
 
 for n in range(1,num_nodes+1):
     #CREATE table matching

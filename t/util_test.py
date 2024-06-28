@@ -1,4 +1,4 @@
-import sys, os, psycopg, json, subprocess, shutil
+import sys, os, psycopg, json, subprocess, shutil, re
 from dotenv import load_dotenv
 
 EXIT_PASS = 0
@@ -199,3 +199,58 @@ def needle_in_haystack(haystack, needle):
       exit_message("Pass", p_rc=0)
     else:
       exit_message("Fail", p_rc=1)
+
+
+# *****************************************************************************
+## Function to grab diff file and data from stdout
+# *****************************************************************************
+
+def get_diff_data(stdout: str) -> tuple[str, dict]:
+    # current pattern expects `diffs/YYYY-MM-DD_hh:mm:ss/diff.json`
+    file_pattern = r'diffs/\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}/diff\.json'
+    match = re.search(file_pattern, stdout)
+
+    if match:
+        diff_file_local = match.group(0)
+        diff_file_path = os.path.join(os.getenv("EDGE_HOME_DIR"), diff_file_local)
+    else:
+        exit_message(f"Fail - {os.path.basename(__file__)} - Couldn't find diff file", 1)
+
+    diff_file = open(diff_file_path, "r")
+    diff_data = json.load(diff_file)
+    return diff_file_local, diff_data
+
+
+# *****************************************************************************
+## Compares data in dicts, allows lists to be out of order
+# *****************************************************************************
+
+def compare_structures(struct1, struct2) -> bool:
+    if isinstance(struct1, dict) and isinstance(struct2, dict):
+        if set(struct1.keys()) != set(struct2.keys()):
+            return False
+        return all(compare_structures(struct1[key], struct2[key]) for key in struct1)
+
+    elif isinstance(struct1, list) and isinstance(struct2, list):
+        if len(struct1) != len(struct2):
+            return False
+        # Sort both lists before comparison to ignore order
+        sorted_struct1 = sorted(struct1, key=str)
+        sorted_struct2 = sorted(struct2, key=str)
+        return all(compare_structures(item1, item2) for item1, item2 in zip(sorted_struct1, sorted_struct2))
+
+    else:
+        return struct1 == struct2
+    
+# *****************************************************************************
+## Prints the result from a command run in a nicer format since its driving me crazy
+# *****************************************************************************
+
+def printres(res: subprocess.CompletedProcess[str]) -> None:
+    print(f"Command `{res.args}` ran with return code {res.returncode}")
+    print("stdout:")
+    for line in res.stdout.strip().split("\\n"):
+        print(f"\t{line.strip()}")
+    print("stderr:")
+    for line in res.stderr.strip().split("\\n"):
+        print(f"\t{line.strip()}")

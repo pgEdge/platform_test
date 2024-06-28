@@ -18,7 +18,7 @@ Disable `firewalld`
     `sudo systemctl stop firewalld`
 
 Configure passwordless `sudo`
-    To configure passwordless sudo, edit the `/etc/sudoers` file.  Locate the line that contains i`includedir /etc/sudoers.d`; add a line below that line that specifies: `your_user_name ALL=(ALL) NOPASSWD:ALL`
+    To configure passwordless sudo, edit the `/etc/sudoers` file.  Locate the line that contains i`includedir /etc/sudoers.d`; add a line below that line that specifies: `%your_user_name ALL=(ALL) NOPASSWD:ALL`
 
 Configure passwordless `ssh`
     To configure passwordless ssh, execute the following commands:
@@ -41,11 +41,11 @@ Disable `SELinux`
 
 Clone the cli git repo into `work`:
 
-`git clone https://github.com/pgEdge/cli.git`
+`git clone https://github.com/pgEdge/platform_test.git`
 
 Move into the `test` directory:
 
-`cd cli/test`
+`cd platform_test`
 
 Ensure that any prerequisites are met:
 
