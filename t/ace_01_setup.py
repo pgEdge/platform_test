@@ -34,7 +34,7 @@ for n in range(1,num_nodes+1):
     #CREATE table - data diff
     row = util_test.write_psql("CREATE TABLE IF NOT EXISTS foo_diff_data (employeeID INT PRIMARY KEY,employeeName VARCHAR(40),employeeMail VARCHAR(40))",host,dbname,port,pw,usr)
     #INSERT data
-    if n==1:
+    if n!=2:
         row = util_test.write_psql("INSERT INTO foo_diff_data (employeeID,employeeName,employeeMail) VALUES(1,'Carol','carol@pgedge.com'),(2,'Bob','bob@pgedge.com')",host,dbname,port,pw,usr)
     else:
         row = util_test.write_psql("INSERT INTO foo_diff_data (employeeID,employeeName,employeeMail) VALUES(1,'Alice','alice@pgedge.com'),(2,'Carol','carol@pgedge.com')",host,dbname,port,pw,usr)
