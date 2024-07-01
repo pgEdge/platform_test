@@ -52,6 +52,14 @@ if res.returncode == 1 or "TABLES MATCH" not in res.stdout:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Database Given", 1)
 print("*" * 100)
 
+# Database Given (2)
+cmd_node = f"ace table-diff {cluster} public.foo --dbname=alicesdb"
+res=util_test.run_cmd("Main databse explicitly given", cmd_node, f"{home_dir}")
+util_test.printres(res)
+if res.returncode == 1 or "ALL TABLES ARE EMPTY" not in res.stdout:
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Database Given New User", 1)
+print("*" * 100)
+
 ## TO DO - ydiff error
 #cmd_node = f"ace table-diff {cluster} public.foo --output=csv"
 #res=util_test.run_cmd("output in csv form", cmd_node, f"{home_dir}")

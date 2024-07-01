@@ -32,7 +32,17 @@ data = {
                 "username": admin_name,
                 "password": admin_pswd,
                 "name": db_name,
-            }
+            },
+            {
+                "username": "alice",
+                "password": "password",
+                "name": "alicesdb",
+            },
+            {
+                "username": "alice",
+                "password": "password",
+                "name": "carolsdb",
+            },
         ],
         "pg_version": pg_vers,
         "auto_ddl": "off",
