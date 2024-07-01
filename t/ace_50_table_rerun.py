@@ -16,6 +16,7 @@ usr=os.getenv("EDGE_USERNAME","lcusr")
 pw=os.getenv("EDGE_PASSWORD","password")
 host=os.getenv("EDGE_HOST","localhost")
 dbname=os.getenv("EDGE_DB","lcdb")
+num_nodes=int(os.getenv("EDGE_NODES",2))
 
 ## Basic Functionality Tests for `ace spock-table-rerun`
 
@@ -86,11 +87,10 @@ if res.returncode == 1 or "TABLES MATCH OK" not in res.stdout:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Matching Rerun by Update", 1)
 print("*" * 100)
 
-# Drop one of the rows from both tables (TODO: make work with any amount of nodes in cluster)
-if not util_test.write_psql("DELETE FROM foo_diff_data WHERE employeeid = 2",host,dbname,port,pw,usr) == 0:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Could not delete from tables", 1)
-if not util_test.write_psql("DELETE FROM foo_diff_data WHERE employeeid = 2",host,dbname,port+1,pw,usr) == 0:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Could not delete from tables", 1)
+# Drop one of the rows from both tables
+for n in range(1,num_nodes+1):
+    if not util_test.write_psql("DELETE FROM foo_diff_data WHERE employeeid = 2",host,dbname,port+n-1,pw,usr) == 0:
+        util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Could not delete from tables", 1)
 
 # Ensures that diff file names don't match
 time.sleep(1)

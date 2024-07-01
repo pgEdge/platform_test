@@ -248,9 +248,15 @@ def compare_structures(struct1, struct2) -> bool:
 
 def printres(res: subprocess.CompletedProcess[str]) -> None:
     print(f"Command `{res.args}` ran with return code {res.returncode}")
-    print("stdout:")
-    for line in res.stdout.strip().split("\\n"):
-        print(f"\t{line.strip()}")
-    print("stderr:")
-    for line in res.stderr.strip().split("\\n"):
-        print(f"\t{line.strip()}")
+    output = res.stdout.strip()
+    error = res.stderr.strip()
+    
+    if output:
+        print("stdout:")
+        for line in output.splitlines():
+            print(f"\t{line}")
+    
+    if error:
+        print("stderr:")
+        for line in error.splitlines():
+            print(f"\t{line}")

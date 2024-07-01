@@ -58,6 +58,14 @@ if res.returncode == 0 or "Dry run should be True (1) or False (0)" not in res.s
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Table Repair", 1)
 print("*" * 100)
 
+# Unauthorized Database Name
+cmd_node = f"ace table-repair {cluster} {diff_file_local} n1 public.foo_diff_data --dbname=carolsdb"
+res=util_test.run_cmd("table-repair", cmd_node, f"{home_dir}")
+util_test.printres(res)
+if res.returncode == 0 or "Invalid table name 'public.foo_diff_data'" not in res.stdout:
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Table Repair", 1)
+print("*" * 100)
+
 # Diff File Not JSON
 diff_path = os.path.join(pg_dir, "diffs")
 if not os.path.exists(diff_path):

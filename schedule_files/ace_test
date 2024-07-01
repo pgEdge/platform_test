@@ -10,6 +10,7 @@ t/spock_5_cofirm_replication.py
 
 t/cluster_1_gen_json.py
 t/ace_01_setup.py
+t/ace_02_clusterjson.py
 t/ace_10_table_diff.py
 t/ace_11_table_diff_args.py
 t/ace_12_table_diff_errors.py

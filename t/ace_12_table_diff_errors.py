@@ -91,5 +91,11 @@ if res.returncode == 0 or "Ignoring duplicate node names" not in res.stdout:
 print("*" * 100)
 
 # Unauthorized Database Name
+cmd_node = f"ace table-diff {cluster} public.foo --dbname=carolsdb"
+res=util_test.run_cmd("Main databse explicitly given", cmd_node, f"{home_dir}")
+util_test.printres(res)
+if res.returncode == 0 or "Invalid table name 'public.foo'" not in res.stdout:
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Database Given New User", 1)
+print("*" * 100)
 
 util_test.exit_message(f"Pass - {os.path.basename(__file__)}", 0)
