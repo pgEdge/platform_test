@@ -8,6 +8,7 @@ util_test.set_env()
 
 home_dir = os.getenv("NC_DIR")
 cluster = os.getenv("EDGE_CLUSTER")
+db_name = os.getenv("EDGE_DB")
 
 ## Additional Arguments Functionality Tests for `ace table-diff`
 
@@ -43,10 +44,13 @@ if res.returncode == 1 or "TABLES MATCH" not in res.stdout:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Output JSON", 1)
 print("*" * 100)
 
-## TO DO - check for diff file
-#if not os.path.exists(f"{home_dir}/diffs"):
-##	util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Failed to make JSON", 1)
-##os.system(f"rm -rf {home_dir}/diffs")
+# Database Given (1)
+cmd_node = f"ace table-diff {cluster} public.foo --dbname={db_name}"
+res=util_test.run_cmd("Main databse explicitly given", cmd_node, f"{home_dir}")
+util_test.printres(res)
+if res.returncode == 1 or "TABLES MATCH" not in res.stdout:
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Database Given", 1)
+print("*" * 100)
 
 ## TO DO - ydiff error
 #cmd_node = f"ace table-diff {cluster} public.foo --output=csv"
