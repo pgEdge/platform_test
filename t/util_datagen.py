@@ -79,7 +79,7 @@ def generate_item(item_type: str):
 
 # Function to generate table into psql servers
 def generate_table(table_name: str, form: dict, size: int) -> None:
-    # load env_data into dict to prevent possible variable name conflicts
+    # Load env_data into dict to prevent possible variable name conflicts
     env_data = {
         "num_nodes": int(os.getenv("EDGE_NODES", 2)),
         "port": int(os.getenv("EDGE_START_PORT", 6432)),
@@ -162,8 +162,35 @@ def generate_table(table_name: str, form: dict, size: int) -> None:
             util_test.exit_message(f"Couldn't close cursor: {e}")
 
 
+def remove_table(table_name: str) -> None:
+    # Load env_data into dict to prevent possible variable name conflicts
+    env_data = {
+        "num_nodes": int(os.getenv("EDGE_NODES", 2)),
+        "port": int(os.getenv("EDGE_START_PORT", 6432)),
+        "usr": os.getenv("EDGE_USERNAME", "lcusr"),
+        "pw": os.getenv("EDGE_PASSWORD", "password"),
+        "host": os.getenv("EDGE_HOST", "localhost"),
+        "dbname": os.getenv("EDGE_DB", "lcdb"),
+    }
+
+    # Connect to PostgreSQL
+    try:
+        cons = [util_test.get_pg_con(env_data["host"], env_data["dbname"], env_data["port"]+n, env_data["pw"], env_data["usr"])
+                for n in range(env_data["num_nodes"])]
+        curs = [con.cursor() for con in cons]
+    except Exception as e:
+        util_test.exit_message(f"Couldn't establish connection: {e}")
+
+    # Remove table
+    try:
+        for cur in curs:
+            cur.execute(f"DROP TABLE IF EXISTS {table_name};")
+    except Exception as e:
+        util_test.exit_message(f"Couldn't remove table: {e}")
+
+
 if __name__ == "__main__":
-    # example of how to use
+    # Example of Use
     generate_table("t1", [
         ("name", "VARCHAR(255)"),
         ("info", "TEXT"),
@@ -174,3 +201,5 @@ if __name__ == "__main__":
         ("obj", "JSONB"),
         ("date", "TIMESTAMP"),
     ], 10)
+
+    remove_table("t1")
