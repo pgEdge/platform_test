@@ -22,7 +22,12 @@ my $homedir1 = "$n1dir/pgedge";
 my $cli = "$ENV{EDGE_CLI}";
 my $pgversion = "$ENV{EDGE_COMPONENT}";
 my $snowflakeversion = "snowflake-$pgversion";
-my $spver = $ENV{EDGE_SPOCK} =~ s/\.//r; #removing the . from version so that 3.2 becomes 32
+# Fetch the spock version from the configuration
+my ($spock_ver, $ver_type) = get_spock_ver_from_config();
+# Remove dots and extract the first two characters to form spock product name
+my $spver = $spock_ver;
+$spver =~ s/\.//g;
+$spver = substr($spver, 0, 2);
 my $spockversion = "spock$spver-$pgversion"; #forming the spock product name e.g. spock32-pg16
 my $datadir1="$homedir1/data/$pgversion";
 #my $pgpassEntry = "*:*:*:$username:$password";
@@ -33,7 +38,7 @@ my $exitcode = 0;
 print("Removing pgedge on node 1\n");
 run_command_and_exit_iferr(qq($homedir1/$cli remove $pgversion --rm-data));
 #run_command_and_exit_iferr(qq($homedir1/$cli remove pgedge --pg $ENV{EDGE_INST_VERSION}));
-print("Verifying $pgversion , $spver , $spver are removed from node 1\n");
+print("Verifying $pgversion , $spockversion  , $snowflakeversion are removed from node 1\n");
 #check for pgV
 my $cmd = qq($homedir1/$cli um list);
 my ($success, $error_message, $full_buf, $stdout_buf, $stderr_buf)= run_command($cmd);
