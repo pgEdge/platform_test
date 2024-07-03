@@ -22,9 +22,6 @@ my $homedir3 = "$n3dir/pgedge";
 my $ncdir = "$ENV{NC_DIR}";
 my $cli = "$ENV{EDGE_CLI}";
 my $pgversion = "$ENV{EDGE_COMPONENT}";
-my $snowflakeversion = "snowflake-$pgversion";
-my $spver = $ENV{EDGE_SPOCK} =~ s/\.//r; #removing the . from version so that 3.2 becomes 32
-my $spockversion = "spock$spver-$pgversion"; #forming the spock product name e.g. spock32-pg16
 my $exitcode = 0;
 my $skipInstall = 0;
 my $ncdir_copy = "/tmp/nccopy";
