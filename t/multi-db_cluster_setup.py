@@ -92,6 +92,15 @@ value = util_test.write_psql("ALTER ROLE lcusr LOGIN PASSWORD 'password';","127.
 print(value)
 print(res.stdout)
 
+## Create a database superuser (we're about to take superuser privs away from lcusr, so use dbsuperuser to log in for diagnostics):
+
+value = util_test.write_psql("CREATE ROLE dbsuperuser WITH SUPERUSER LOGIN PASSWORD 'password';","127.0.0.1","lcdb","6432","password","alice")
+print(f"We're creating a database superuser here: {res.stdout},{value}")
+
+value = util_test.write_psql("CREATE  ROLE dbsuperuser WITH SUPERUSER LOGIN PASSWORD 'password';","127.0.0.1","alicesdb","6433","password","alice")
+print(f"We're creating a database superuser here: {res.stdout},{value}")
+
+
 ## Set permissions for Alice and lcusr:
 
 value = util_test.write_psql("ALTER ROLE alice WITH NOSUPERUSER;","127.0.0.1","alicesdb","6432","password","alice")
@@ -150,7 +159,6 @@ value = util_test.write_psql("INSERT INTO lcusrstable VALUES (1,'a', 'b');","127
 print(value)
 print(res.stdout)
 
-
 ## Query the tables:
 
 value = util_test.write_psql("SELECT * FROM alicestable;","127.0.0.1","alicesdb","6432","password","alice")
@@ -168,16 +176,20 @@ print(res.stdout,value)
 ## Confirm that alice cannot query lcusr's tables, and vice versa:
 
 value = util_test.write_nofail_psql("SELECT * FROM lcusrstable;","127.0.0.1","lcdb","6432","password","alice")
-print(res.stdout,value)
+print(f"This command should show a failure to connect: res.stdout")
 
 value = util_test.write_nofail_psql("SELECT * FROM lcusrstable;","127.0.0.1","lcdb","6433","password","alice")
-print(res.stdout,value)
+print(f"This command should show a failure to connect: res.stdout")
 
 value = util_test.write_nofail_psql("SELECT * FROM alicestable;","127.0.0.1","alicesdb","6432","password","lcusr")
-print(res.stdout,value)
+print(f"This command should show a failure to connect: res.stdout")
 
 value = util_test.write_nofail_psql("SELECT * FROM alicestable;","127.0.0.1","alicesdb","6433","password","lcusr")
-print(res.stdout,value)
+print(f"This command should show a failure to connect: res.stdout")
 
+print(f"home_dir = {home_dir}\n")
+command2 = (f"cluster replication-check {cluster_name}")
+res2=util_test.run_nc_cmd("This command should tell us about our cluster", command2, f"{home_dir}")
+print(f"res2 = {res2}\n")
 
 
