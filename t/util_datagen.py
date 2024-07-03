@@ -78,7 +78,7 @@ def generate_item(item_type: str):
 
 
 # Function to generate table into psql servers
-def generate_table(table_name: str, form: dict, size: int) -> None:
+def generate_table(table_name: str, form: dict, size: int, comp_pkey = False) -> None:
     # Load env_data into dict to prevent possible variable name conflicts
     env_data = {
         "num_nodes": int(os.getenv("EDGE_NODES", 2)),
@@ -105,14 +105,20 @@ def generate_table(table_name: str, form: dict, size: int) -> None:
     psql_qry = f"""
         DROP TABLE IF EXISTS {table_name};
         CREATE TABLE {table_name} (
-            id SERIAL PRIMARY KEY,
             {
+                "rand_id INTEGER NOT NULL, main_id SERIAL NOT NULL, " if comp_pkey else "id SERIAL PRIMARY KEY, "
+            } {
                 ', '.join([
                     f"{row_name} {row_tpye}" for row_name, row_tpye in form
                 ])
+            } {
+                ", PRIMARY KEY(rand_id, main_id)" if comp_pkey else ""
             }
         );
     """
+
+    if comp_pkey:
+        form = [("rand_id", "INTEGER")] + form
 
     try:
         for cur in curs:
@@ -122,7 +128,11 @@ def generate_table(table_name: str, form: dict, size: int) -> None:
 
     # Create data and write to table
     psql_qry = f"""
-        INSERT INTO {table_name} (name, info, small_int, big_int, float_value, numbers, obj, date)
+        INSERT INTO {table_name} ({
+            ", ".join([
+                row_name for row_name, _ in form
+            ])
+        })
         VALUES ({
             ", ".join([
                 "%s" for _ in form
