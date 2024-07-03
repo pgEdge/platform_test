@@ -31,7 +31,7 @@ cmd_node = f"ace table-rerun {cluster} notreal.json public.foo_diff_data"
 res=util_test.run_cmd("table-rerun", cmd_node, f"{home_dir}")
 util_test.printres(res)
 if res.returncode == 0 or "Diff file notreal.json not found" not in res.stdout:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Wrong Cluster Name", 1) 
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Wrong File Name", 1) 
 print("*" * 100)
 
 # Non-Existent Table Name
@@ -39,7 +39,7 @@ cmd_node = f"ace table-rerun {cluster} {diff_file_local} public.foo_not_real"
 res=util_test.run_cmd("table-rerun", cmd_node, f"{home_dir}")
 util_test.printres(res)
 if res.returncode == 0 or "Invalid table name 'public.foo_not_real'" not in res.stdout:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Wrong Cluster Name", 1) 
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Wrong Table Name", 1) 
 print("*" * 100)
 
 # Non-Existent Database Name
@@ -47,7 +47,15 @@ cmd_node = f"ace table-rerun {cluster} {diff_file_local} public.foo_diff_data --
 res=util_test.run_cmd("table-rerun", cmd_node, f"{home_dir}")
 util_test.printres(res)
 if res.returncode == 0 or "Database 'not_real' not found in cluster 'demo'" not in res.stdout:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Wrong Cluster Name", 1) 
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Wrong Database Name", 1) 
+print("*" * 100)
+
+# Un-authorized Database Name
+cmd_node = f"ace table-rerun {cluster} {diff_file_local} public.foo_diff_data --dbname=carolsdb"
+res=util_test.run_cmd("table-rerun", cmd_node, f"{home_dir}")
+util_test.printres(res)
+if res.returncode == 0 or "Invalid table name 'public.foo_diff_data'" not in res.stdout:
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Unauthorzied Database Name", 1) 
 print("*" * 100)
 
 # Diff File Not JSON
