@@ -167,6 +167,24 @@ sub sanitize_and_combine_multiline_stdout {
     return $str;
 }
 
+# This function reads the EDGE_SPOCK_DEFAULT_VER and EDGE_SPOCK_PINNED_VER
+# environment variables. If EDGE_SPOCK_PINNED_VER is defined and not empty,
+# it returns this version along with the version type 'pinned'. Otherwise, it
+# returns EDGE_SPOCK_DEFAULT_VER along with the version type 'default'.
+
+sub get_spock_ver_from_config {
+    my $default_ver = $ENV{EDGE_SPOCK_DEFAULT_VER} // '';
+    my $pinned_ver = $ENV{EDGE_SPOCK_PINNED_VER} // '';
+    
+    print("EDGE_SPOCK_DEFAULT_VER is $default_ver and EDGE_SPOCK_PINNED_VER is $pinned_ver .\n");
+    
+    if ($pinned_ver ne '') {
+        return ($pinned_ver, 'pinned');
+    } else {
+        return ($default_ver, 'default');
+    }
+}
+
 
 # This 1 at the end is required, even though it looks like an accident :)
 1;
