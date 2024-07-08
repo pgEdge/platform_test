@@ -1,5 +1,5 @@
 import sys, os, util_test, subprocess
-import random, string, json
+import random, string, json, time, psycopg
 from datetime import datetime, timedelta
 
 ## Get Test Settings
@@ -78,7 +78,7 @@ def generate_item(item_type: str):
 
 
 # Function to generate table into psql servers
-def generate_table(table_name: str, form: dict, size: int, comp_pkey = False) -> None:
+def generate_table(table_name: str, form: list[tuple[str, str]], size: int, comp_pkey = False, seed = int(time.time())) -> None:
     # Load env_data into dict to prevent possible variable name conflicts
     env_data = {
         "num_nodes": int(os.getenv("EDGE_NODES", 2)),
@@ -92,6 +92,17 @@ def generate_table(table_name: str, form: dict, size: int, comp_pkey = False) ->
     if size > 1000:
         checkpoint = size/10
         stars = 1
+    
+    msg = f"""
+Running generate table with args:
+    table name: {table_name}
+    form: {json.dumps(form)}
+    size: {size}
+    comp_pkey: {comp_pkey}
+    seed: {seed}
+"""
+    print(msg)
+    random.seed(seed)
 
     # Connect to PostgreSQL
     try:
@@ -214,8 +225,16 @@ def remove_table(table_name: str) -> None:
 
 
 if __name__ == "__main__":
-    # Example of Use
-    generate_table("t1", [
+    env_data = {
+        "num_nodes": int(os.getenv("EDGE_NODES", 2)),
+        "port": int(os.getenv("EDGE_START_PORT", 6432)),
+        "usr": os.getenv("EDGE_USERNAME", "lcusr"),
+        "pw": os.getenv("EDGE_PASSWORD", "password"),
+        "host": os.getenv("EDGE_HOST", "localhost"),
+        "dbname": os.getenv("EDGE_DB", "lcdb"),
+    }
+
+    big_form = [
         ("name", "VARCHAR(255)"),
         ("info", "TEXT"),
         ("small_int", "INTEGER"),
@@ -223,7 +242,53 @@ if __name__ == "__main__":
         ("float_value", "REAL"),
         ("numbers", "FLOAT[]"),
         ("obj", "JSONB"),
-        ("date", "TIMESTAMP"),
-    ], 10)
+        # ("date", "TIMESTAMP"),    (commented out to make printing nicer since datetime cannot be put into json)
+    ]
+
+    small_form = [
+        ("name", "VARCHAR(255)"),
+        ("info", "TEXT"),
+        ("small_int", "INTEGER"),
+        ("big_int", "BIGINT"),
+    ]
+
+    # Example of Use
+    generate_table("t1", big_form, 10)
+
+    with util_test.get_pg_con(env_data["host"],env_data["dbname"],env_data["port"],env_data["pw"],env_data["usr"]) as con:
+        cur = con.cursor()
+        cur.execute("SELECT * from t1")
+        print("---------- T1 ----------")
+        print(json.dumps(cur.fetchall(), indent=2))
+        print()
+        con.commit()
+        cur.close()
 
     remove_table("t1")
+
+    # Showcase of Seed
+    generate_table("t1", small_form, 10, seed=42)   # should match
+    generate_table("t2", small_form, 10, seed=42)   # should match
+    generate_table("t3", small_form, 10)            # should not match
+
+    with util_test.get_pg_con(env_data["host"],env_data["dbname"],env_data["port"],env_data["pw"],env_data["usr"]) as con:
+        cur = con.cursor()
+        cur.execute("SELECT * from t1")
+        print("---------- T1 ----------")
+        print(json.dumps(cur.fetchall(), indent=2))
+        print()
+        cur.execute("SELECT * from t2")
+        print("---------- T2 ----------")
+        print(json.dumps(cur.fetchall(), indent=2))
+        print()
+        cur.execute("SELECT * from t3")
+        print("---------- T3 ----------")
+        print(json.dumps(cur.fetchall(), indent=2))
+        print()
+        con.commit()
+        cur.close()
+    
+    remove_table("t1")
+    remove_table("t2")
+    remove_table("t3")
+
