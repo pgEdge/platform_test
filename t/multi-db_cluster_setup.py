@@ -104,56 +104,56 @@ print(f"We're creating a database superuser here: {res.stdout},{value}")
 ## Set permissions for Alice and lcusr:
 
 value = util_test.write_psql("ALTER ROLE alice WITH NOSUPERUSER;","127.0.0.1","alicesdb","6432","password","alice")
-print(res.stdout,value)
+print(res.stdout)
 
 value = util_test.write_psql("ALTER ROLE lcusr WITH NOSUPERUSER;","127.0.0.1","lcdb","6432","password","lcusr")
-print(res.stdout,value)
+print(res.stdout)
 
 value = util_test.write_psql("ALTER ROLE alice WITH NOSUPERUSER;","127.0.0.1","alicesdb","6433","password","alice")
-print(res.stdout,value)
+print(res.stdout)
 
 value = util_test.write_psql("ALTER ROLE lcusr WITH NOSUPERUSER;","127.0.0.1","lcdb","6433","password","lcusr")
-print(res.stdout,value)
+print(res.stdout)
 
 ## Revoke connect:
 
 value = util_test.write_psql("REVOKE CONNECT ON DATABASE alicesdb FROM PUBLIC;","127.0.0.1","alicesdb","6432","password","alice")
-print(res.stdout,value)
+print(res.stdout)
 
 value = util_test.write_psql("REVOKE CONNECT ON DATABASE lcdb FROM PUBLIC;","127.0.0.1","lcdb","6432","password","lcusr")
-print(res.stdout,value)
+print(res.stdout)
 
 value = util_test.write_psql("REVOKE CONNECT ON DATABASE alicesdb FROM PUBLIC;","127.0.0.1","alicesdb","6433","password","alice")
-print(res.stdout,value)
+print(res.stdout)
 
 value = util_test.write_psql("REVOKE CONNECT ON DATABASE lcdb FROM PUBLIC;","127.0.0.1","lcdb","6433","password","lcusr")
-print(res.stdout,value)
+print(res.stdout)
 
 ## Create Alice's table on nodes 1 and 2: 
 
 value = util_test.write_psql("CREATE TABLE IF NOT EXISTS alicestable (employeeID INT PRIMARY KEY,employeeName VARCHAR(40),employeeMail VARCHAR(40));","127.0.0.1","alicesdb","6432","password","alice")
-print(res.stdout,value)
+print(res.stdout)
 
 value = util_test.write_psql("INSERT INTO alicestable VALUES (1,'a', 'b');","127.0.0.1","alicesdb","6432","password","alice")
-print(res.stdout,value)
+print(res.stdout)
 
 value = util_test.write_psql("CREATE TABLE IF NOT EXISTS alicestable (employeeID INT PRIMARY KEY,employeeName VARCHAR(40),employeeMail VARCHAR(40));","127.0.0.1","alicesdb","6433","password","alice")
-print(res.stdout,value)
+print(res.stdout)
 
 value = util_test.write_psql("INSERT INTO alicestable VALUES (1,'a', 'b');","127.0.0.1","alicesdb","6433","password","alice")
-print(res.stdout,value)
+print(res.stdout)
 
 ## Create lcusr's table on nodes 1 and 2:
 
 value = util_test.write_psql("CREATE TABLE IF NOT EXISTS lcusrstable (employeeID INT PRIMARY KEY,employeeName VARCHAR(40),employeeMail VARCHAR(40));","127.0.0.1","lcdb","6432","password","lcusr")
-print(res.stdout,value)
+print(res.stdout)
 
 value = util_test.write_psql("INSERT INTO lcusrstable VALUES (1,'a', 'b');","127.0.0.1","lcdb","6432","password","lcusr")
 print(value)
 print(res.stdout)
 
 value = util_test.write_psql("CREATE TABLE IF NOT EXISTS lcusrstable (employeeID INT PRIMARY KEY,employeeName VARCHAR(40),employeeMail VARCHAR(40));","127.0.0.1","lcdb","6433","password","lcusr")
-print(res.stdout,value)
+print(res.stdout)
 
 value = util_test.write_psql("INSERT INTO lcusrstable VALUES (1,'a', 'b');","127.0.0.1","lcdb","6433","password","lcusr")
 print(value)
@@ -162,16 +162,16 @@ print(res.stdout)
 ## Query the tables:
 
 value = util_test.write_psql("SELECT * FROM alicestable;","127.0.0.1","alicesdb","6432","password","alice")
-print(res.stdout,value)
+print(res.stdout)
 
 value = util_test.write_psql("SELECT * FROM alicestable;","127.0.0.1","alicesdb","6433","password","alice")
-print(res.stdout,value)
+print(res.stdout)
 
 value = util_test.write_psql("SELECT * FROM lcusrstable;","127.0.0.1","lcdb","6432","password","lcusr")
-print(res.stdout,value)
+print(res.stdout)
 
 value = util_test.write_psql("SELECT * FROM lcusrstable;","127.0.0.1","lcdb","6433","password","lcusr")
-print(res.stdout,value)
+print(res.stdout)
 
 ## Confirm that alice cannot query lcusr's tables, and vice versa:
 
@@ -190,6 +190,16 @@ print(f"This command should show a failure to connect: res.stdout")
 print(f"home_dir = {home_dir}\n")
 command2 = (f"cluster replication-check {cluster_name}")
 res2=util_test.run_nc_cmd("This command should tell us about our cluster", command2, f"{home_dir}")
-print(f"res2 = {res2}\n")
+print(f"res2 = {res2.stdout}\n")
 
 
+
+## Check for needles in the haystack; this scenario only works for our current download version.
+#
+# res2 should include: "There were one or more errors while connecting to databases" or "relation "public.lcusrstable" does not exist"
+#
+
+if "No such file or directory" in str(res2.stdout) or res2.returncode != 0:
+
+    util_test.EXIT_FAIL
+       

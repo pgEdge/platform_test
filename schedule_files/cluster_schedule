@@ -1,21 +1,21 @@
-## Set up a two node cluster
-#t/020_nodectl_install_pgedge.pl
-
-#t/cluster-create-json.py
-#t/cluster-json-validate.py
-#t/cluster-json-invalid-file.py
-#t/cluster-init.py
-#t/cluster-init-bad-json.py
+## Set up tests for a two node cluster
+t/020_nodectl_install_pgedge.pl
+t/cluster-create-json.py
+t/cluster-json-validate.py
+t/cluster-json-invalid-file.py
+t/cluster-init.py
+t/cluster-init-bad-json.py
 
 ## Remove components, Clean environment and free ports
-#t/8998_env_remove_pgedge_node1.pl
-#t/8999_env_remove_pgedge_node2.pl
-
-## Delete the nc directory and pgpass file to prepare for the multi-db cluster tests
-#9998_remove_nc_and_pgpass_dirs.py
+t/8998_env_remove_pgedge_node1.pl
+t/8999_env_remove_pgedge_node2.pl
 
 ## Multi-node cluster tests
-
 t/020_nodectl_install_pgedge.pl
 t/multi-db_cluster_setup.py
 t/multi-db_cluster_exercise_ace.py
+
+## Remove components, Clean environment and free ports
+t/8998_env_remove_pgedge_node1.pl
+t/8999_env_remove_pgedge_node2.pl
+t/9998_remove_nc_and_pgpass_dirs.py

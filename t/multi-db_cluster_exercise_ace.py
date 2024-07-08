@@ -30,16 +30,39 @@ print(f"home_dir = {home_dir}\n")
 command = (f"cluster replication-check {cluster_name}")
 res=util_test.run_nc_cmd("This command should tell us about our cluster", command, f"{home_dir}")
 print(f"res = {res}\n")
+print(f"result from res: {res.returncode}")
+print("*"*100)
 
+# Check the version returned by pgedge info at the nc dir.
+ 
+command = "info"
+res1=util_test.run_nc_cmd("Querying db guc-show for information about shared_preload_libraries.", command, f"{home_dir}")
+print(f"The version information is: {res1}")
+print(res.returncode)
+print("*"*100)
 
 print(f"home_dir = {home_dir}\n")
 command2 = (f"ace table-diff demo public.alicestable --dbname=alicesdb")
 res2=util_test.run_nc_cmd("Running an ace command", command2, f"{home_dir}")
-print(f"Checking alicestable with ace = {res2}\n")
-
+print(f"res2 - Checking alicestable with ace: {res2}\n")
+print(f"result from res2: {res.returncode}")
+print("*"*100)
 
 print(f"home_dir = {home_dir}\n")
 command3 = (f"ace table-diff demo public.lcusrstable --dbname=lcdb")
 res3=util_test.run_nc_cmd("Running an ace command", command3, f"{home_dir}")
-print(f"Checking lcusrstable with ace = {res3}\n")
+print(f"res3 - Checking lcusrstable with ace = {res3}\n")
+print(f"result from res3: {res.returncode}")
+print("*"*100)
 
+# 
+# If the CLI version is less than: 24.6.7
+# res3 should include: "There were one or more errors while connecting to databases" or "relation "public.lcusrstable" does not exist"
+# 
+# If the CLI version is equal to or higher than:
+# The version should be higher than: 
+# res3 should not include: "There were one or more errors while connecting to databases" or "relation "public.lcusrstable" does not exist"
+
+if "There were one or more errors while connecting to databases" in str(res3.stdout) or res3.returncode != 0:
+
+    util_test.EXIT_FAIL
