@@ -198,6 +198,20 @@ def remove_table(table_name: str) -> None:
     except Exception as e:
         util_test.exit_message(f"Couldn't remove table: {e}")
 
+    # Commit and close connections
+    for con in cons:
+        try:
+            con.commit()
+            con.close()
+        except Exception as e:
+            util_test.exit_message(f"Couldn't close connection: {e}")
+
+    for cur in curs:
+        try:
+            cur.close()
+        except Exception as e:
+            util_test.exit_message(f"Couldn't close cursor: {e}")
+
 
 if __name__ == "__main__":
     # Example of Use
