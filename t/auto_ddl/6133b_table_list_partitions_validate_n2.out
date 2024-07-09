@@ -1,0 +1,93 @@
+--This file will run on n2 and validate all the replicated tables data, structure and replication sets they're in
+-- Prepared statement for spock.tables to list parent and child tables as parent table name will be contained in partition name
+PREPARE spocktab AS SELECT nspname, relname, set_name FROM spock.tables WHERE relname LIKE '%' || $1 || '%' ORDER BY relid;
+PREPARE
+\d+ sales_list_east
+                                        Table "public.sales_list_east"
+   Column    |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+-------------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
+ sale_id     | integer |           | not null |         | plain    |             |              | 
+ sale_region | text    |           | not null |         | extended |             |              | 
+ sale_amount | numeric |           |          |         | main     |             |              | 
+Partition of: sales_list FOR VALUES IN ('East')
+Partition constraint: ((sale_region IS NOT NULL) AND (sale_region = 'East'::text))
+Indexes:
+    "sales_list_east_pkey" PRIMARY KEY, btree (sale_id, sale_region)
+Access method: heap
+
+\d+ sales_list_west
+                                        Table "public.sales_list_west"
+   Column    |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+-------------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
+ sale_id     | integer |           | not null |         | plain    |             |              | 
+ sale_region | text    |           | not null |         | extended |             |              | 
+ sale_amount | numeric |           |          |         | main     |             |              | 
+Partition of: sales_list FOR VALUES IN ('West')
+Partition constraint: ((sale_region IS NOT NULL) AND (sale_region = 'West'::text))
+Indexes:
+    "sales_list_west_pkey" PRIMARY KEY, btree (sale_id, sale_region)
+Access method: heap
+
+\d+ sales_list_north
+                                       Table "public.sales_list_north"
+   Column    |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+-------------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
+ sale_id     | integer |           | not null |         | plain    |             |              | 
+ sale_region | text    |           | not null |         | extended |             |              | 
+ sale_amount | numeric |           |          |         | main     |             |              | 
+Partition of: sales_list FOR VALUES IN ('North')
+Partition constraint: ((sale_region IS NOT NULL) AND (sale_region = 'North'::text))
+Indexes:
+    "sales_list_north_pkey" PRIMARY KEY, btree (sale_id, sale_region)
+Access method: heap
+
+\d+ sales_list
+                                    Partitioned table "public.sales_list"
+   Column    |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+-------------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
+ sale_id     | integer |           | not null |         | plain    |             |              | 
+ sale_region | text    |           | not null |         | extended |             |              | 
+ sale_amount | numeric |           |          |         | main     |             |              | 
+Partition key: LIST (sale_region)
+Indexes:
+    "sales_list_pkey" PRIMARY KEY, btree (sale_id, sale_region)
+Partitions: sales_list_east FOR VALUES IN ('East'),
+            sales_list_north FOR VALUES IN ('North'),
+            sales_list_west FOR VALUES IN ('West')
+
+EXECUTE spocktab('sales_list'); -- Expect the new partition to be listed
+ nspname |     relname      | set_name 
+---------+------------------+----------
+ public  | sales_list       | default
+ public  | sales_list_east  | default
+ public  | sales_list_west  | default
+ public  | sales_list_north | default
+(4 rows)
+
+SELECT * FROM sales_list ORDER BY sale_id; -- Expect 4 rows
+ sale_id | sale_region | sale_amount 
+---------+-------------+-------------
+       1 | East        |       100.0
+       2 | West        |       200.0
+       3 | East        |       150.0
+       4 | North       |       250.0
+(4 rows)
+
+--exercise ddl on n2
+DROP TABLE sales_list CASCADE;
+NOTICE:  drop cascades to table sales_list_north membership in replication set default
+NOTICE:  drop cascades to table sales_list_west membership in replication set default
+NOTICE:  drop cascades to table sales_list_east membership in replication set default
+NOTICE:  drop cascades to table sales_list membership in replication set default
+INFO:  DDL statement replicated.
+DROP TABLE
+/*
+https://github.com/orgs/pgEdge/projects/6/views/7?filterQuery=category%3AAutoDDL+&visibleFields=%5B%22Title%22%2C%22Assignees%22%2C%22Status%22%2C77649763%5D&pane=issue&itemId=69962278
+\d+ products_list
+\d+ products_list_clothing
+\d+ products_list_electronics
+EXECUTE spocktab('products_list'); -- Expect all to be in default repset
+SELECT * FROM products_list ORDER BY product_id; -- Expect 3 rows
+--exercise ddl on n2
+DROP TABLE products_list CASCADE;
+*/

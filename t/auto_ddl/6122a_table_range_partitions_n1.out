@@ -126,7 +126,12 @@ Indexes:
     "revenue_range_pkey" PRIMARY KEY, btree (rev_id, rev_date)
 Number of partitions: 2 (Use \d+ to list them.)
 
-EXECUTE spocktab('revenue_range'); -- Expect revenue_range to move to default set
+/*TO FIX:
+At present, adding a parimary key to parent table does not move the partitions to default repset.
+To revisit and update outputs once this is addressed
+https://github.com/orgs/pgEdge/projects/6/views/7?filterQuery=category%3AAutoDDL+&visibleFields=%5B%22Title%22%2C%22Assignees%22%2C%22Status%22%2C77649763%5D&pane=issue&itemId=69962278
+*/
+EXECUTE spocktab('revenue_range'); -- Expect revenue_range and all child partitions to move to default set
  nspname |      relname       |      set_name       
 ---------+--------------------+---------------------
  public  | revenue_range      | default
