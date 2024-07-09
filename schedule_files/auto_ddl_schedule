@@ -39,6 +39,9 @@ t/auto_ddl/6133c_table_list_parition_validate_n1.sql
 t/auto_ddl/6144a_table_hash_partitions_n1.sql
 t/auto_ddl/6144b_table_hash_partitions_validate_n2.sql
 t/auto_ddl/6144c_table_hash_parition_validate_n1.sql
+t/auto_ddl/6155a_index_n1.sql
+t/auto_ddl/6155b_index_validate_n2.sql
+t/auto_ddl/6155c_index_validate_drop_n1.sql
 ##
 # cleanup scripts
 ##

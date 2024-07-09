@@ -1,0 +1,207 @@
+-- Prepared statement for spock.tables to list tables and associated indexes
+PREPARE spocktab AS SELECT nspname, relname, set_name FROM spock.tables WHERE relname LIKE '%' || $1 || '%' ORDER BY relid;
+PREPARE
+-- Validate and drop indexes on n2
+-- Validate indexes on product_catalog
+\di *product_catalog_*
+                           List of relations
+ Schema |            Name            | Type  | Owner |      Table      
+--------+----------------------------+-------+-------+-----------------
+ public | brin_product_catalog_idx   | index | rocky | product_catalog
+ public | btree_product_catalog_idx  | index | rocky | product_catalog
+ public | gin_product_catalog_idx    | index | rocky | product_catalog
+ public | gist_product_catalog_idx   | index | rocky | product_catalog
+ public | hash_product_catalog_idx   | index | rocky | product_catalog
+ public | product_catalog_pkey       | index | rocky | product_catalog
+ public | spgist_product_catalog_idx | index | rocky | product_catalog
+(7 rows)
+
+\d product_catalog
+                     Table "public.product_catalog"
+    Column    |          Type          | Collation | Nullable | Default 
+--------------+------------------------+-----------+----------+---------
+ product_id   | integer                |           | not null | 
+ product_name | character varying(100) |           |          | 
+ product_tags | text[]                 |           |          | 
+ location     | point                  |           |          | 
+ price        | numeric                |           |          | 
+Indexes:
+    "product_catalog_pkey" PRIMARY KEY, btree (product_id)
+    "brin_product_catalog_idx" brin (price)
+    "btree_product_catalog_idx" btree (product_id)
+    "gin_product_catalog_idx" gin (product_tags)
+    "gist_product_catalog_idx" gist (location)
+    "hash_product_catalog_idx" hash (product_name)
+    "spgist_product_catalog_idx" spgist (location)
+
+-- Validate specific index
+SELECT * FROM product_catalog WHERE product_id = 2; -- Expect 1 row with product_id = 2
+ product_id | product_name |     product_tags     | location | price  
+------------+--------------+----------------------+----------+--------
+          2 | Smartphone   | {Electronics,Mobile} | (2,2)    | 599.99
+(1 row)
+
+-- Validate indexes on employee_directory
+\di *_emp_*
+                         List of relations
+ Schema |         Name         | Type  | Owner |       Table        
+--------+----------------------+-------+-------+--------------------
+ public | unique_emp_email_idx | index | rocky | employee_directory
+ public | unique_emp_id_idx    | index | rocky | employee_directory
+(2 rows)
+
+\d employee_directory
+                  Table "public.employee_directory"
+  Column   |          Type          | Collation | Nullable | Default 
+-----------+------------------------+-----------+----------+---------
+ emp_id    | integer                |           | not null | 
+ emp_name  | character varying(100) |           |          | 
+ emp_email | character varying(100) |           |          | 
+Indexes:
+    "employee_directory_pkey" PRIMARY KEY, btree (emp_id)
+    "unique_emp_email_idx" UNIQUE, btree (emp_email) NULLS NOT DISTINCT
+    "unique_emp_id_idx" UNIQUE, btree (emp_id)
+
+-- Validate specific index
+SELECT * FROM employee_directory WHERE emp_email = 'bob@example.com'; -- Expect 1 row with emp_email = 'bob@example.com'
+ emp_id | emp_name |    emp_email    
+--------+----------+-----------------
+      2 | Bob      | bob@example.com
+(1 row)
+
+-- Validate indexes on sales_data
+\di *sales*
+                       List of relations
+ Schema |           Name           | Type  | Owner |   Table    
+--------+--------------------------+-------+-------+------------
+ public | conditional_sales_idx    | index | rocky | sales_data
+ public | func_sales_amount_idx    | index | rocky | sales_data
+ public | partial_sales_idx        | index | rocky | sales_data
+ public | renamed_sales_region_idx | index | rocky | sales_data
+ public | sales_data_pkey          | index | rocky | sales_data
+(5 rows)
+
+\d sales_data
+                      Table "public.sales_data"
+   Column    |         Type          | Collation | Nullable | Default 
+-------------+-----------------------+-----------+----------+---------
+ sale_id     | integer               |           | not null | 
+ sale_date   | date                  |           |          | 
+ sale_amount | numeric               |           |          | 
+ sale_region | character varying(50) |           |          | 
+Indexes:
+    "sales_data_pkey" PRIMARY KEY, btree (sale_id)
+    "conditional_sales_idx" btree (sale_amount) WHERE sale_amount > 150::numeric
+    "func_sales_amount_idx" UNIQUE, btree ((sale_amount * 2::numeric))
+    "partial_sales_idx" btree (sale_date) INCLUDE (sale_region)
+    "renamed_sales_region_idx" btree (sale_region)
+
+-- Validate specific index
+SELECT * FROM sales_data WHERE sale_amount * 2 = 300.0; -- Expect 1 row with sale_amount = 150.0
+ sale_id | sale_date  | sale_amount | sale_region 
+---------+------------+-------------+-------------
+       3 | 2023-01-03 |       150.0 | East
+(1 row)
+
+-- Validate concurrently created indexes on concurrent_idx_tbl, should not exist as they weren't replicated
+\di *concurrent*
+Did not find any relation named "*concurrent*".
+\d concurrent_idx_tbl
+                Table "public.concurrent_idx_tbl"
+ Column |          Type          | Collation | Nullable | Default 
+--------+------------------------+-----------+----------+---------
+ id     | integer                |           |          | 
+ name   | character varying(100) |           |          | 
+
+-- Validate specific index
+SELECT * FROM concurrent_idx_tbl WHERE name = 'Second'; -- Expect 1 row with name = 'Second'
+ id |  name  
+----+--------
+  2 | Second
+(1 row)
+
+-- Drop indexes on product_catalog
+DROP INDEX btree_product_catalog_idx;
+INFO:  DDL statement replicated.
+DROP INDEX
+DROP INDEX hash_product_catalog_idx;
+INFO:  DDL statement replicated.
+DROP INDEX
+DROP INDEX brin_product_catalog_idx;
+INFO:  DDL statement replicated.
+DROP INDEX
+DROP INDEX gin_product_catalog_idx;
+INFO:  DDL statement replicated.
+DROP INDEX
+DROP INDEX gist_product_catalog_idx;
+INFO:  DDL statement replicated.
+DROP INDEX
+DROP INDEX spgist_product_catalog_idx;
+INFO:  DDL statement replicated.
+DROP INDEX
+-- Drop indexes on employee_directory
+DROP INDEX unique_emp_id_idx;
+INFO:  DDL statement replicated.
+DROP INDEX
+DROP INDEX unique_emp_email_idx;
+INFO:  DDL statement replicated.
+DROP INDEX
+-- Drop indexes on sales_data
+DROP INDEX func_sales_amount_idx;
+INFO:  DDL statement replicated.
+DROP INDEX
+DROP INDEX renamed_sales_region_idx;
+INFO:  DDL statement replicated.
+DROP INDEX
+DROP INDEX conditional_sales_idx;
+INFO:  DDL statement replicated.
+DROP INDEX
+DROP INDEX partial_sales_idx;
+INFO:  DDL statement replicated.
+DROP INDEX
+-- Drop concurrently created indexes on concurrent_idx_tbl
+DROP INDEX CONCURRENTLY concurrent_idx_tbl_name_idx; --error (since this did not replicate to n2)
+ERROR:  index "concurrent_idx_tbl_name_idx" does not exist
+DROP INDEX CONCURRENTLY concurrent_unique_idx_tbl_id_idx; --error (since this did not replicate to n2)
+ERROR:  index "concurrent_unique_idx_tbl_id_idx" does not exist
+-- Validate replication sets for primary key-related tables
+EXECUTE spocktab('product_catalog'); -- Expect product_catalog in default set
+ nspname |     relname     | set_name 
+---------+-----------------+----------
+ public  | product_catalog | default
+(1 row)
+
+EXECUTE spocktab('employee_directory'); -- Expect employee_directory in default set
+ nspname |      relname       | set_name 
+---------+--------------------+----------
+ public  | employee_directory | default
+(1 row)
+
+EXECUTE spocktab('sales_data'); -- Expect sales_data in default set
+ nspname |  relname   | set_name 
+---------+------------+----------
+ public  | sales_data | default
+(1 row)
+
+EXECUTE spocktab('concurrent_idx_tbl'); -- Expect sales_data in default set
+ nspname |      relname       |      set_name       
+---------+--------------------+---------------------
+ public  | concurrent_idx_tbl | default_insert_only
+(1 row)
+
+DROP TABLE product_catalog CASCADE;
+NOTICE:  drop cascades to table product_catalog membership in replication set default
+INFO:  DDL statement replicated.
+DROP TABLE
+DROP TABLE sales_data CASCADE;
+NOTICE:  drop cascades to table sales_data membership in replication set default
+INFO:  DDL statement replicated.
+DROP TABLE
+DROP TABLE employee_directory CASCADE;
+NOTICE:  drop cascades to table employee_directory membership in replication set default
+INFO:  DDL statement replicated.
+DROP TABLE
+DROP TABLE concurrent_idx_tbl CASCADE;
+NOTICE:  drop cascades to table concurrent_idx_tbl membership in replication set default_insert_only
+INFO:  DDL statement replicated.
+DROP TABLE
