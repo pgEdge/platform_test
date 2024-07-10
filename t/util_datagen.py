@@ -227,7 +227,7 @@ def remove_table(table_name: str) -> None:
 def mod_and_repair(
         column: tuple[str, str], table_name: str,
         cluster = os.getenv("EDGE_CLUSTER"), home_dir = os.getenv("NC_DIR"),
-        where = "mod(id, 3) == 0", set: str = None
+        where = "mod(id, 3) == 0", set: str = None, verbose = False
     ) -> tuple[int, str]:
 
     if not set:
@@ -240,33 +240,59 @@ def mod_and_repair(
         WHERE {where}
     """
 
+    msg = f"""
+Running mod_and_repair with options:
+    column: {column}
+    table name: {table_name}
+    psql qry: {psql_qry}
+"""
+
+    print(msg)
+
     if util_test.write_psql(psql_qry, env_data["host"], env_data["dbname"], env_data["port"]+1, env_data["pw"], env_data["usr"]) == 1:
         util_test.exit_message("Couldn't edit contents of table")
 
     # Use table diff to find differences and save diff file info
+    start = time.time()
     cmd_node = f"ace table-diff {cluster} public.{table_name}"
     res=util_test.run_cmd("Matching Tables", cmd_node, f"{home_dir}")
-    util_test.printres(res)
+    if verbose:
+        util_test.printres(res)
+        print("*" * 100)
+    else:
+        print("Ran table-diff")
     if res.returncode == 1 or "TABLES DO NOT MATCH" not in res.stdout:
         return 1, "Couldn't find difference in tables"
     diff_file, _ = util_test.get_diff_data(res.stdout)
-    print("*" * 100)
+    diff_time = time.time() - start
 
     # Use table repair with n1 as the source of truth
+    start = time.time()
     cmd_node = f"ace table-repair {cluster} {diff_file} n1 public.{table_name}"
     res=util_test.run_cmd("table-repair", cmd_node, f"{home_dir}")
-    util_test.printres(res)
+    if verbose:
+        util_test.printres(res)
+        print("*" * 100)
+    else:
+        print("Ran table-repair")
     if res.returncode == 1 or f"Successfully applied diffs to public.{table_name} in cluster {cluster}" not in res.stdout:
         return 1, "Couldn't repair differences in tables"
-    print("*" * 100)
+    repair_time = time.time()-start
 
     # Run with now matching info
+    start = time.time()
     cmd_node = f"ace table-rerun {cluster} {diff_file} public.{table_name}"
     res=util_test.run_cmd("table-rerun", cmd_node, f"{home_dir}")
-    util_test.printres(res)
+    if verbose:
+        util_test.printres(res)
+        print("*" * 100)
+    else:
+        print("Ran table-rerun")
     if res.returncode == 1 or "TABLES MATCH OK" not in res.stdout:
         return 1, "Differences in tables not fixed"
-    print("*" * 100)
+    rerun_time = time.time() - start
+
+    print(f"Process took {diff_time:0.4f}s for diff, {repair_time:0.4f}s for repair, and {rerun_time:0.4f}s for rerun")
 
     return 0, ""
 
