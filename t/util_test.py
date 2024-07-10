@@ -76,6 +76,15 @@ def get_pg_con(host,dbname,port,pw,usr):
     exit_message(e)
   return(con1)
 
+## Get psql connection - this is a no fail connection that returns authentication error information
+def get_nofail_pg_con(host,dbname,port,pw,usr):
+  try:
+    con1 = psycopg.connect(dbname=dbname, user=usr, host=host, port=port, password=pw)
+  except Exception as e:
+    con1 = None
+    print("The connection attempt failed")
+  return(con1)
+
 
 ## Run psql on both nodes
 def run_psql(cmd1,con1):
@@ -108,13 +117,32 @@ def write_psql(cmd,host,dbname,port,pw,usr):
         cur.close()
     except Exception as e:
         exit_message(e)
-
     try:
         con.close()
     except Exception as e:
         pass
     return ret
 
+
+## Write psql without throwing an error on each failed command:
+def write_nofail_psql(cmd,host,dbname,port,pw,usr):
+    ret = 1
+    con = get_nofail_pg_con(host,dbname,port,pw,usr)
+    print(f"get_nofail_pg_con returned: {con}")
+    try:
+        cur = con.cursor()
+        cur.execute(cmd)
+        print(cur.statusmessage)
+        ret = 0
+        con.commit()
+        cur.close()
+    except Exception as e:
+        print(f"This command failed: {cmd}")
+    try:
+        con.close()
+    except Exception as e:
+        pass
+    return ret
 
 ## Read psql
 def read_psql(cmd,host,dbname,port,pw,usr):

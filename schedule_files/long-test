@@ -265,6 +265,15 @@ t/spock_6_drop.py
 t/spock_7_negative_list.py
 t/spock_8_negative_create.py
 
+## Remove components, Clean environment and free ports
+t/8998_env_remove_pgedge_node1.pl
+t/8999_env_remove_pgedge_node2.pl
+t/9998_remove_nc_and_pgpass_dirs.py
+
+## Run the multi-db cluster tests
+t/020_nodectl_install_pgedge.pl
+t/multi-db_cluster_setup.py
+t/multi-db_cluster_exercise_ace.py
 
 ## Remove components, Clean environment and free ports
 t/8998_env_remove_pgedge_node1.pl
@@ -272,5 +281,3 @@ t/8999_env_remove_pgedge_node2.pl
 
 # Delete the nc directory and pgpass file
 t/9998_remove_nc_and_pgpass_dirs.py
-
-
