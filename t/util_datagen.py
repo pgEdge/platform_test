@@ -76,11 +76,9 @@ def generate_item(item_type: str):
         return create_random_time()
     util_test.exit_message("Error: wrong input type to generate_item")
 
-
-# Function to generate table into psql servers
-def generate_table(table_name: str, form: list[tuple[str, str]], size: int, comp_pkey = False, seed = int(time.time())) -> None:
-    # Load env_data into dict to prevent possible variable name conflicts
-    env_data = {
+# Gets env data
+def get_env():
+    return {
         "num_nodes": int(os.getenv("EDGE_NODES", 2)),
         "port": int(os.getenv("EDGE_START_PORT", 6432)),
         "usr": os.getenv("EDGE_USERNAME", "lcusr"),
@@ -89,10 +87,19 @@ def generate_table(table_name: str, form: list[tuple[str, str]], size: int, comp
         "dbname": os.getenv("EDGE_DB", "lcdb"),
     }
 
+# Function to generate table into psql servers
+def generate_table(
+        table_name: str, form: list[tuple[str, str]],
+        size: int, comp_pkey = False,
+        seed = int(time.time())
+    ) -> None:
+
+    # Load env_data into dict to prevent possible variable name conflicts
+    env_data = get_env()
     if size > 1000:
         checkpoint = size/10
         stars = 1
-    
+
     msg = f"""
 Running generate table with args:
     table name: {table_name}
@@ -117,13 +124,13 @@ Running generate table with args:
         DROP TABLE IF EXISTS {table_name};
         CREATE TABLE {table_name} (
             {
-                "rand_id INTEGER NOT NULL, main_id SERIAL NOT NULL, " if comp_pkey else "id SERIAL PRIMARY KEY, "
+                "rand_id INTEGER NOT NULL, id SERIAL NOT NULL, " if comp_pkey else "id SERIAL PRIMARY KEY, "
             } {
                 ', '.join([
                     f"{row_name} {row_tpye}" for row_name, row_tpye in form
                 ])
             } {
-                ", PRIMARY KEY(rand_id, main_id)" if comp_pkey else ""
+                ", PRIMARY KEY(rand_id, id)" if comp_pkey else ""
             }
         );
     """
@@ -185,14 +192,7 @@ Running generate table with args:
 
 def remove_table(table_name: str) -> None:
     # Load env_data into dict to prevent possible variable name conflicts
-    env_data = {
-        "num_nodes": int(os.getenv("EDGE_NODES", 2)),
-        "port": int(os.getenv("EDGE_START_PORT", 6432)),
-        "usr": os.getenv("EDGE_USERNAME", "lcusr"),
-        "pw": os.getenv("EDGE_PASSWORD", "password"),
-        "host": os.getenv("EDGE_HOST", "localhost"),
-        "dbname": os.getenv("EDGE_DB", "lcdb"),
-    }
+    env_data = get_env()
 
     # Connect to PostgreSQL
     try:
@@ -222,6 +222,53 @@ def remove_table(table_name: str) -> None:
             cur.close()
         except Exception as e:
             util_test.exit_message(f"Couldn't close cursor: {e}")
+
+
+def mod_and_repair(
+        column: tuple[str, str], table_name: str,
+        cluster = os.getenv("EDGE_CLUSTER"), home_dir = os.getenv("NC_DIR"),
+        where = "mod(id, 3) == 0", set: str = None
+    ) -> tuple[int, str]:
+
+    if not set:
+        set = generate_item(column[1])
+    env_data = get_env()
+
+    psql_qry = f"""
+        UPDATE {table_name}
+        SET {column[0]} = '{set}'
+        WHERE {where}
+    """
+
+    if util_test.write_psql(psql_qry, env_data["host"], env_data["dbname"], env_data["port"]+1, env_data["pw"], env_data["usr"]) == 1:
+        util_test.exit_message("Couldn't edit contents of table")
+
+    # Use table diff to find differences and save diff file info
+    cmd_node = f"ace table-diff {cluster} public.{table_name}"
+    res=util_test.run_cmd("Matching Tables", cmd_node, f"{home_dir}")
+    util_test.printres(res)
+    if res.returncode == 1 or "TABLES DO NOT MATCH" not in res.stdout:
+        return 1, "Couldn't find difference in tables"
+    diff_file, _ = util_test.get_diff_data(res.stdout)
+    print("*" * 100)
+
+    # Use table repair with n1 as the source of truth
+    cmd_node = f"ace table-repair {cluster} {diff_file} n1 public.{table_name}"
+    res=util_test.run_cmd("table-repair", cmd_node, f"{home_dir}")
+    util_test.printres(res)
+    if res.returncode == 1 or f"Successfully applied diffs to public.{table_name} in cluster {cluster}" not in res.stdout:
+        return 1, "Couldn't repair differences in tables"
+    print("*" * 100)
+
+    # Run with now matching info
+    cmd_node = f"ace table-rerun {cluster} {diff_file} public.{table_name}"
+    res=util_test.run_cmd("table-rerun", cmd_node, f"{home_dir}")
+    util_test.printres(res)
+    if res.returncode == 1 or "TABLES MATCH OK" not in res.stdout:
+        return 1, "Differences in tables not fixed"
+    print("*" * 100)
+
+    return 0, ""
 
 
 if __name__ == "__main__":
@@ -287,7 +334,7 @@ if __name__ == "__main__":
         print()
         con.commit()
         cur.close()
-    
+
     remove_table("t1")
     remove_table("t2")
     remove_table("t3")
