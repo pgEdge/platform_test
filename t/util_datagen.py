@@ -227,7 +227,7 @@ def remove_table(table_name: str) -> None:
 def mod_and_repair(
         column: tuple[str, str], table_name: str,
         cluster = os.getenv("EDGE_CLUSTER"), home_dir = os.getenv("NC_DIR"),
-        where = "mod(id, 3) == 0", set: str = None, verbose = False
+        where = "mod(id, 3) = 0", set: str = None, verbose = False
     ) -> tuple[int, str]:
 
     if not set:
@@ -259,8 +259,6 @@ Running mod_and_repair with options:
     if verbose:
         util_test.printres(res)
         print("*" * 100)
-    else:
-        print("Ran table-diff")
     if res.returncode == 1 or "TABLES DO NOT MATCH" not in res.stdout:
         return 1, "Couldn't find difference in tables"
     diff_file, _ = util_test.get_diff_data(res.stdout)
@@ -273,8 +271,6 @@ Running mod_and_repair with options:
     if verbose:
         util_test.printres(res)
         print("*" * 100)
-    else:
-        print("Ran table-repair")
     if res.returncode == 1 or f"Successfully applied diffs to public.{table_name} in cluster {cluster}" not in res.stdout:
         return 1, "Couldn't repair differences in tables"
     repair_time = time.time()-start
@@ -286,8 +282,6 @@ Running mod_and_repair with options:
     if verbose:
         util_test.printres(res)
         print("*" * 100)
-    else:
-        print("Ran table-rerun")
     if res.returncode == 1 or "TABLES MATCH OK" not in res.stdout:
         return 1, "Differences in tables not fixed"
     rerun_time = time.time() - start
