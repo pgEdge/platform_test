@@ -42,6 +42,9 @@ t/auto_ddl/6144c_table_hash_parition_validate_n1.sql
 t/auto_ddl/6155a_index_n1.sql
 t/auto_ddl/6155b_index_validate_n2.sql
 t/auto_ddl/6155c_index_validate_drop_n1.sql
+t/auto_ddl/6166a_views_materialized_views_n1.sql
+t/auto_ddl/6166b_view_mat_views_validate_n2.sql
+t/auto_ddl/6166c_views_mat_view_validate_n1.sql
 ##
 # cleanup scripts
 ##
