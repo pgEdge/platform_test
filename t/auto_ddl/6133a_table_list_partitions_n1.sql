@@ -2,7 +2,7 @@
 PREPARE spocktab AS SELECT nspname, relname, set_name FROM spock.tables WHERE relname LIKE '%' || $1 || '%' ORDER BY relid;
 
 -----------------------------
--- List Partitioning Examples
+-- List Partitioning
 -----------------------------
 
 -- Create a list partitioned table with primary key
