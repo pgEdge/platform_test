@@ -76,6 +76,8 @@ def generate_item(item_type: str):
     if item_type == "TIMESTAMP":
         return create_random_time()
     if item_type == "CHAR(36)":
+        # note that uuid4 isn't affected by random.seed()
+        # if that ever becomes a problem look into uuid3() or uuid5()
         return str(uuid4())
     util_test.exit_message("Error: wrong input type to generate_item")
 
@@ -98,11 +100,16 @@ def get_seed():
 def valid_pkeys():
     return ("serial", "uuid", "comp")
 
+# Get all nodes
+def get_all_nodes() -> list[int]:
+    num_nodes = get_env()["num_nodes"]
+    return [num for num in range(1,num_nodes+1)]
+
 # Function to generate table into psql servers
 def generate_table(
         table_name: str, form: list[tuple[str, str]],
         size: int, pkey: str = "serial",
-        seed: int = None
+        seed: int = None, nodes: list[int] = get_all_nodes()
     ) -> None:
 
     # Load env_data into dict to prevent possible variable name conflicts
@@ -127,14 +134,15 @@ Running generate table with args:
     size: {size}
     pkey: {pkey}
     seed: {seed}
+    nodes: {nodes}
 """
     print(msg)
     random.seed(seed)
 
     # Connect to PostgreSQL
     try:
-        cons = [util_test.get_pg_con(env_data["host"], env_data["dbname"], env_data["port"]+n, env_data["pw"], env_data["usr"])
-                for n in range(env_data["num_nodes"])]
+        cons = [util_test.get_pg_con(env_data["host"], env_data["dbname"], env_data["port"]+n-1, env_data["pw"], env_data["usr"])
+                for n in nodes]
         curs = [con.cursor() for con in cons]
     except Exception as e:
         util_test.exit_message(f"Couldn't establish connection: {e}")
@@ -316,7 +324,7 @@ Running mod_and_repair with options:
 def insert_into(
         table_name: str, form: list[tuple[str, str]],
         amount: int, pkey: str = "serial",
-        seed: int = None, nodes = [1]
+        seed: int = None, nodes: list[int] = get_all_nodes()
     ) -> None:
 
     # Load env_data into dict to prevent possible variable name conflicts

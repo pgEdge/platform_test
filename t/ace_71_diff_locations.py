@@ -89,21 +89,21 @@ if code == 1:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - {msg}: even dense")
 
 # Lines Inserted to the End
-insert_into("t1", form, 2000)
+insert_into("t1", form, 2000, nodes=[1])
 code, msg = mod_and_repair(column, "t1", cluster, home_dir, where="false")
 if code == 1:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - {msg}: lines inserted at end")
 
 # Lines Inserted into Middle
-insert_into("t2", form, 2000)
-insert_into("t2", form, 13000, nodes=[num for num in range(1,num_nodes+1)])
+insert_into("t2", form, 2000, nodes=[1])
+insert_into("t2", form, 13000)
 code, msg = mod_and_repair(column, "t2", cluster, home_dir, where="false")
 if code == 1:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - {msg}: lines inserted at end")
 
 # Lines Inserted into Middle
-insert_into("t3", form, 2000, pkey="uuid")
-insert_into("t3", form, 13000, nodes=[num for num in range(1,num_nodes+1)], pkey="uuid")
+insert_into("t3", form, 2000, nodes=[1], pkey="uuid")
+insert_into("t3", form, 13000, pkey="uuid")
 code, msg = mod_and_repair(column, "t3", cluster, home_dir, where="false")
 if code == 1:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - {msg}: lines inserted at end")
