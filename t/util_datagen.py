@@ -1,6 +1,7 @@
 import sys, os, util_test, subprocess
 import random, string, json, time, psycopg
 from datetime import datetime, timedelta
+from uuid import uuid4
 
 ## Get Test Settings
 util_test.set_env()
@@ -74,6 +75,8 @@ def generate_item(item_type: str):
         return json.dumps(create_object())
     if item_type == "TIMESTAMP":
         return create_random_time()
+    if item_type == "CHAR(36)":
+        return str(uuid4())
     util_test.exit_message("Error: wrong input type to generate_item")
 
 # Gets env data
@@ -87,11 +90,19 @@ def get_env():
         "dbname": os.getenv("EDGE_DB", "lcdb"),
     }
 
+# Generates base seed
+def get_seed():
+    return random.randint(-32768, 32767)
+
+# Valid pkey options
+def valid_pkeys():
+    return ("serial", "uuid", "comp")
+
 # Function to generate table into psql servers
 def generate_table(
         table_name: str, form: list[tuple[str, str]],
-        size: int, comp_pkey = False,
-        seed = int(time.time())
+        size: int, pkey: str = "serial",
+        seed: int = None
     ) -> None:
 
     # Load env_data into dict to prevent possible variable name conflicts
@@ -100,12 +111,21 @@ def generate_table(
         checkpoint = size/10
         stars = 1
 
+    if seed is None:
+        seed = get_seed()
+
+    if pkey not in valid_pkeys():
+        util_test.exit_message(f"invalid option for pkey: {pkey}")
+
+    comp_pkey = pkey == "comp"
+    pkey_msg = "id SERIAL PRIMARY KEY" if pkey == "serial" else "id CHAR(36) PRIMARY KEY DEFAULT (gen_random_uuid())"
+
     msg = f"""
 Running generate table with args:
     table name: {table_name}
     form: {json.dumps(form)}
     size: {size}
-    comp_pkey: {comp_pkey}
+    pkey: {pkey}
     seed: {seed}
 """
     print(msg)
@@ -124,7 +144,7 @@ Running generate table with args:
         DROP TABLE IF EXISTS {table_name};
         CREATE TABLE {table_name} (
             {
-                "rand_id INTEGER NOT NULL, id SERIAL NOT NULL, " if comp_pkey else "id SERIAL PRIMARY KEY, "
+                "rand_id INTEGER NOT NULL, id SERIAL NOT NULL, " if comp_pkey else f"{pkey_msg}, "
             } {
                 ', '.join([
                     f"{row_name} {row_tpye}" for row_name, row_tpye in form
@@ -137,6 +157,8 @@ Running generate table with args:
 
     if comp_pkey:
         form = [("rand_id", "INTEGER")] + form
+    elif pkey == "uuid":
+        form = [("id", "CHAR(36)")] + form
 
     try:
         for cur in curs:
@@ -289,6 +311,88 @@ Running mod_and_repair with options:
     print(f"Process took {diff_time:0.4f}s for diff, {repair_time:0.4f}s for repair, and {rerun_time:0.4f}s for rerun")
 
     return 0, ""
+
+
+def insert_into(
+        table_name: str, form: list[tuple[str, str]],
+        amount: int, pkey: str = "serial",
+        seed: int = None, nodes = [1]
+    ) -> None:
+
+    # Load env_data into dict to prevent possible variable name conflicts
+    env_data = get_env()
+
+    if seed is None:
+        seed = get_seed()
+
+    msg = f"""
+Running insert into with args:
+    table name: {table_name}
+    form: {json.dumps(form)}
+    size: {amount}
+    pkey: {pkey}
+    seed: {seed}
+    nodes: {nodes}
+"""
+    print(msg)
+    random.seed(seed)
+
+    if pkey not in valid_pkeys():
+        util_test.exit_message(f"invalid option for pkey: {pkey}")
+    comp_pkey = pkey == "comp"
+
+    # Connect to PostgreSQL
+    try:
+        cons = [util_test.get_pg_con(env_data["host"], env_data["dbname"], env_data["port"]+n-1, env_data["pw"], env_data["usr"])
+                for n in nodes]
+        curs = [con.cursor() for con in cons]
+    except Exception as e:
+        util_test.exit_message(f"Couldn't establish connection: {e}")
+
+    if comp_pkey:
+        form = [("rand_id", "INTEGER")] + form
+    elif pkey == "uuid":
+        form = [("id", "CHAR(36)")] + form
+
+    # Write to table
+    psql_qry = f"""
+        INSERT INTO {table_name} ({
+            ", ".join([
+                row_name for row_name, _ in form
+            ])
+        })
+        VALUES ({
+            ", ".join([
+                "%s" for _ in form
+            ])
+        });
+    """
+
+    try:
+        for n in range(amount):
+            # Generates Items
+            items = tuple([generate_item(row_type) for _, row_type in form])
+
+            # Write to table
+            for cur in curs:
+                cur.execute(psql_qry, items)
+
+    except Exception as e:
+        util_test.exit_message(f"Error in writing to table or generating data: {e}")
+
+    # Commit and close connections
+    for con in cons:
+        try:
+            con.commit()
+            con.close()
+        except Exception as e:
+            util_test.exit_message(f"Couldn't close connection: {e}")
+
+    for cur in curs:
+        try:
+            cur.close()
+        except Exception as e:
+            util_test.exit_message(f"Couldn't close cursor: {e}")
 
 
 if __name__ == "__main__":

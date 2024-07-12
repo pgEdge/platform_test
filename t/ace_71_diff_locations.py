@@ -1,5 +1,5 @@
 import sys, os, util_test, subprocess
-from util_datagen import generate_table, remove_table, mod_and_repair
+from util_datagen import generate_table, remove_table, mod_and_repair, insert_into
 
 ## Print Script
 print(f"Starting - {os.path.basename(__file__)}")
@@ -30,18 +30,34 @@ form = [
 #   block at the end
 #   evenly distributed (sparse)
 #   evenly distributed (dense)
-#   extra rows in middle
 #   extra rows at end
+#   extra rows in middle (tested with both serial and uuid)
 
-# Generates Table
+# Generates Tables
 generate_table("t1", form, 25000)
+generate_table("t2", form, 10000)
+generate_table("t3", form, 10000, pkey="uuid")
 
 # Assert that all tables match
 cmd_node = f"ace table-diff {cluster} public.t1"
 res=util_test.run_cmd("Matching Tables", cmd_node, f"{home_dir}")
 util_test.printres(res)
 if res.returncode == 1 or "TABLES MATCH OK" not in res.stdout:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Matching Tables", 1)
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Matching Tables (t1)", 1)
+print("*" * 100)
+
+cmd_node = f"ace table-diff {cluster} public.t2"
+res=util_test.run_cmd("Matching Tables", cmd_node, f"{home_dir}")
+util_test.printres(res)
+if res.returncode == 1 or "TABLES MATCH OK" not in res.stdout:
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Matching Tables (t2)", 1)
+print("*" * 100)
+
+cmd_node = f"ace table-diff {cluster} public.t3"
+res=util_test.run_cmd("Matching Tables", cmd_node, f"{home_dir}")
+util_test.printres(res)
+if res.returncode == 1 or "TABLES MATCH OK" not in res.stdout:
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Matching Tables (t3)", 1)
 print("*" * 100)
 
 # Start Checks
@@ -72,7 +88,30 @@ code, msg = mod_and_repair(column, "t1", cluster, home_dir)
 if code == 1:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - {msg}: even dense")
 
+# Lines Inserted to the End
+insert_into("t1", form, 2000)
+code, msg = mod_and_repair(column, "t1", cluster, home_dir, where="false")
+if code == 1:
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - {msg}: lines inserted at end")
+
+# Lines Inserted into Middle
+insert_into("t2", form, 2000)
+insert_into("t2", form, 13000, nodes=[num for num in range(1,num_nodes+1)])
+code, msg = mod_and_repair(column, "t2", cluster, home_dir, where="false")
+if code == 1:
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - {msg}: lines inserted at end")
+
+# Lines Inserted into Middle
+insert_into("t3", form, 2000, pkey="uuid")
+insert_into("t3", form, 13000, nodes=[num for num in range(1,num_nodes+1)], pkey="uuid")
+code, msg = mod_and_repair(column, "t3", cluster, home_dir, where="false")
+if code == 1:
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - {msg}: lines inserted at end")
+
+
 # Removes Table
 remove_table("t1")
+remove_table("t2")
+remove_table("t3")
 
 util_test.exit_message(f"Pass - {os.path.basename(__file__)}", 0)

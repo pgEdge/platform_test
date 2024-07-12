@@ -43,8 +43,8 @@ quoted_col_form = [
 # Generates Small and Large Table
 generate_table("t1", basic_form,   100)
 generate_table("t2", basic_form, 10000)
-generate_table("t3", basic_form,   100, comp_pkey=True)
-generate_table("t4", basic_form, 10000, comp_pkey=True)
+generate_table("t3", basic_form,   100, pkey="comp")
+generate_table("t4", basic_form, 10000, pkey="comp")
 
 # Assert that all tables match
 cmd_node = f"ace table-diff {cluster} public.t1"
