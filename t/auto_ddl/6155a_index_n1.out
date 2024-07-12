@@ -1,0 +1,294 @@
+-- Prepared statement for spock.tables to list tables and associated indexes
+PREPARE spocktab AS SELECT nspname, relname, set_name FROM spock.tables WHERE relname LIKE '%' || $1 || '%' ORDER BY relid;
+PREPARE
+-----------------------------
+-- INDEX tests
+-----------------------------
+-- Create a table for different types of indexes
+CREATE TABLE product_catalog (
+    product_id INT PRIMARY KEY,
+    product_name VARCHAR(100),
+    product_tags TEXT[],
+    location POINT,
+    price DECIMAL
+);
+INFO:  DDL statement replicated.
+CREATE TABLE
+INSERT INTO product_catalog (product_id, product_name, product_tags, location, price)
+VALUES 
+    (1, 'Laptop', ARRAY['Electronics', 'Computers'], POINT(1, 1), 999.99),
+    (2, 'Smartphone', ARRAY['Electronics', 'Mobile'], POINT(2, 2), 599.99),
+    (3, 'Tablet', ARRAY['Electronics', 'Computers'], POINT(3, 3), 399.99);
+INSERT 0 3
+-- Create various types of indexes
+CREATE INDEX btree_product_catalog_idx ON product_catalog USING btree (product_id);
+INFO:  DDL statement replicated.
+CREATE INDEX
+CREATE INDEX hash_product_catalog_idx ON product_catalog USING hash (product_name);
+INFO:  DDL statement replicated.
+CREATE INDEX
+CREATE INDEX brin_product_catalog_idx ON product_catalog USING brin (price);
+INFO:  DDL statement replicated.
+CREATE INDEX
+CREATE INDEX gin_product_catalog_idx ON product_catalog USING gin (product_tags);
+INFO:  DDL statement replicated.
+CREATE INDEX
+CREATE INDEX gist_product_catalog_idx ON product_catalog USING gist (location);
+INFO:  DDL statement replicated.
+CREATE INDEX
+CREATE INDEX spgist_product_catalog_idx ON product_catalog USING spgist (location);
+INFO:  DDL statement replicated.
+CREATE INDEX
+-- Validate indexes
+\di *product_catalog_*
+                           List of relations
+ Schema |            Name            | Type  | Owner |      Table      
+--------+----------------------------+-------+-------+-----------------
+ public | brin_product_catalog_idx   | index | rocky | product_catalog
+ public | btree_product_catalog_idx  | index | rocky | product_catalog
+ public | gin_product_catalog_idx    | index | rocky | product_catalog
+ public | gist_product_catalog_idx   | index | rocky | product_catalog
+ public | hash_product_catalog_idx   | index | rocky | product_catalog
+ public | product_catalog_pkey       | index | rocky | product_catalog
+ public | spgist_product_catalog_idx | index | rocky | product_catalog
+(7 rows)
+
+\d product_catalog
+                     Table "public.product_catalog"
+    Column    |          Type          | Collation | Nullable | Default 
+--------------+------------------------+-----------+----------+---------
+ product_id   | integer                |           | not null | 
+ product_name | character varying(100) |           |          | 
+ product_tags | text[]                 |           |          | 
+ location     | point                  |           |          | 
+ price        | numeric                |           |          | 
+Indexes:
+    "product_catalog_pkey" PRIMARY KEY, btree (product_id)
+    "brin_product_catalog_idx" brin (price)
+    "btree_product_catalog_idx" btree (product_id)
+    "gin_product_catalog_idx" gin (product_tags)
+    "gist_product_catalog_idx" gist (location)
+    "hash_product_catalog_idx" hash (product_name)
+    "spgist_product_catalog_idx" spgist (location)
+
+-- Create a table with unique indexes
+CREATE TABLE employee_directory (
+    emp_id INT PRIMARY KEY,
+    emp_name VARCHAR(100),
+    emp_email VARCHAR(100)
+);
+INFO:  DDL statement replicated.
+CREATE TABLE
+INSERT INTO employee_directory (emp_id, emp_name, emp_email)
+VALUES 
+    (1, 'Alice', 'alice@example.com'),
+    (2, 'Bob', 'bob@example.com'),
+    (3, 'Charlie', 'charlie@example.com');
+INSERT 0 3
+-- Create unique indexes with different options
+CREATE UNIQUE INDEX unique_emp_id_idx ON employee_directory (emp_id) NULLS DISTINCT;
+INFO:  DDL statement replicated.
+CREATE INDEX
+CREATE UNIQUE INDEX unique_emp_email_idx ON employee_directory (emp_email) NULLS NOT DISTINCT;
+INFO:  DDL statement replicated.
+CREATE INDEX
+-- Validate indexes
+\di *_emp_*
+                         List of relations
+ Schema |         Name         | Type  | Owner |       Table        
+--------+----------------------+-------+-------+--------------------
+ public | unique_emp_email_idx | index | rocky | employee_directory
+ public | unique_emp_id_idx    | index | rocky | employee_directory
+(2 rows)
+
+\d employee_directory
+                  Table "public.employee_directory"
+  Column   |          Type          | Collation | Nullable | Default 
+-----------+------------------------+-----------+----------+---------
+ emp_id    | integer                |           | not null | 
+ emp_name  | character varying(100) |           |          | 
+ emp_email | character varying(100) |           |          | 
+Indexes:
+    "employee_directory_pkey" PRIMARY KEY, btree (emp_id)
+    "unique_emp_email_idx" UNIQUE, btree (emp_email) NULLS NOT DISTINCT
+    "unique_emp_id_idx" UNIQUE, btree (emp_id)
+
+-- Create a table for functional indexes
+CREATE TABLE sales_data (
+    sale_id INT PRIMARY KEY,
+    sale_date DATE,
+    sale_amount DECIMAL,
+    sale_region VARCHAR(50)
+);
+INFO:  DDL statement replicated.
+CREATE TABLE
+INSERT INTO sales_data (sale_id, sale_date, sale_amount, sale_region)
+VALUES 
+    (1, '2023-01-01', 100.0, 'North'),
+    (2, '2023-01-02', 200.0, 'South'),
+    (3, '2023-01-03', 150.0, 'East'),
+    (4, '2023-01-04', 250.0, 'West');
+INSERT 0 4
+-- Create functional index
+CREATE UNIQUE INDEX func_sales_amount_idx ON sales_data ((sale_amount * 2));
+INFO:  DDL statement replicated.
+CREATE INDEX
+-- Validate indexes
+\di *sales_*
+                      List of relations
+ Schema |         Name          | Type  | Owner |   Table    
+--------+-----------------------+-------+-------+------------
+ public | func_sales_amount_idx | index | rocky | sales_data
+ public | sales_data_pkey       | index | rocky | sales_data
+(2 rows)
+
+-- Altering Indexes
+-- Create an index to alter
+CREATE INDEX alter_sales_region_idx ON sales_data (sale_region);
+INFO:  DDL statement replicated.
+CREATE INDEX
+-- Validate indexes
+\di *sales*
+                      List of relations
+ Schema |          Name          | Type  | Owner |   Table    
+--------+------------------------+-------+-------+------------
+ public | alter_sales_region_idx | index | rocky | sales_data
+ public | func_sales_amount_idx  | index | rocky | sales_data
+ public | sales_data_pkey        | index | rocky | sales_data
+(3 rows)
+
+-- Alter the index to rename it
+ALTER INDEX alter_sales_region_idx RENAME TO renamed_sales_region_idx;
+INFO:  DDL statement replicated.
+ALTER INDEX
+-- Create a conditional index
+CREATE INDEX conditional_sales_idx ON sales_data (sale_amount) WHERE sale_amount > 150;
+INFO:  DDL statement replicated.
+CREATE INDEX
+-- Create a index
+CREATE INDEX partial_sales_idx ON sales_data (sale_date) INCLUDE (sale_region);
+INFO:  DDL statement replicated.
+CREATE INDEX
+-- Validate  index
+\di *sales*
+                       List of relations
+ Schema |           Name           | Type  | Owner |   Table    
+--------+--------------------------+-------+-------+------------
+ public | conditional_sales_idx    | index | rocky | sales_data
+ public | func_sales_amount_idx    | index | rocky | sales_data
+ public | partial_sales_idx        | index | rocky | sales_data
+ public | renamed_sales_region_idx | index | rocky | sales_data
+ public | sales_data_pkey          | index | rocky | sales_data
+(5 rows)
+
+\d sales_data
+                      Table "public.sales_data"
+   Column    |         Type          | Collation | Nullable | Default 
+-------------+-----------------------+-----------+----------+---------
+ sale_id     | integer               |           | not null | 
+ sale_date   | date                  |           |          | 
+ sale_amount | numeric               |           |          | 
+ sale_region | character varying(50) |           |          | 
+Indexes:
+    "sales_data_pkey" PRIMARY KEY, btree (sale_id)
+    "conditional_sales_idx" btree (sale_amount) WHERE sale_amount > 150::numeric
+    "func_sales_amount_idx" UNIQUE, btree ((sale_amount * 2::numeric))
+    "partial_sales_idx" btree (sale_date) INCLUDE (sale_region)
+    "renamed_sales_region_idx" btree (sale_region)
+
+-- Create a table for concurrently created indexes
+CREATE TABLE concurrent_idx_tbl (
+    id INT,
+    name VARCHAR(100)
+);
+INFO:  DDL statement replicated.
+CREATE TABLE
+INSERT INTO concurrent_idx_tbl (id, name)
+VALUES 
+    (1, 'First'),
+    (2, 'Second'),
+    (3, 'Third');
+INSERT 0 3
+-- Create indexes concurrently, should only be created locally and will not replicate
+CREATE INDEX CONCURRENTLY concurrent_idx_tbl_name_idx ON concurrent_idx_tbl (name);
+WARNING:  This DDL statement will not be replicated.
+CREATE INDEX
+CREATE UNIQUE INDEX CONCURRENTLY concurrent_unique_idx_tbl_id_idx ON concurrent_idx_tbl (id);
+WARNING:  This DDL statement will not be replicated.
+CREATE INDEX
+-- Validate concurrently created indexes
+\di *concurrent*
+                               List of relations
+ Schema |               Name               | Type  | Owner |       Table        
+--------+----------------------------------+-------+-------+--------------------
+ public | concurrent_idx_tbl_name_idx      | index | rocky | concurrent_idx_tbl
+ public | concurrent_unique_idx_tbl_id_idx | index | rocky | concurrent_idx_tbl
+(2 rows)
+
+\d concurrent_idx_tbl
+                Table "public.concurrent_idx_tbl"
+ Column |          Type          | Collation | Nullable | Default 
+--------+------------------------+-----------+----------+---------
+ id     | integer                |           |          | 
+ name   | character varying(100) |           |          | 
+Indexes:
+    "concurrent_idx_tbl_name_idx" btree (name)
+    "concurrent_unique_idx_tbl_id_idx" UNIQUE, btree (id)
+
+-- DML to verify index usage
+SELECT * FROM product_catalog WHERE product_id = 2;
+ product_id | product_name |     product_tags     | location | price  
+------------+--------------+----------------------+----------+--------
+          2 | Smartphone   | {Electronics,Mobile} | (2,2)    | 599.99
+(1 row)
+
+SELECT * FROM employee_directory WHERE emp_email = 'bob@example.com';
+ emp_id | emp_name |    emp_email    
+--------+----------+-----------------
+      2 | Bob      | bob@example.com
+(1 row)
+
+SELECT * FROM sales_data WHERE sale_amount * 2 = 300.0;
+ sale_id | sale_date  | sale_amount | sale_region 
+---------+------------+-------------+-------------
+       3 | 2023-01-03 |       150.0 | East
+(1 row)
+
+SELECT * FROM sales_data WHERE sale_amount > 150;
+ sale_id | sale_date  | sale_amount | sale_region 
+---------+------------+-------------+-------------
+       2 | 2023-01-02 |       200.0 | South
+       4 | 2023-01-04 |       250.0 | West
+(2 rows)
+
+SELECT * FROM concurrent_idx_tbl WHERE name = 'Second';
+ id |  name  
+----+--------
+  2 | Second
+(1 row)
+
+-- Validate replication sets for primary key-related tables
+EXECUTE spocktab('product_catalog'); -- Expect product_catalog in default set
+ nspname |     relname     | set_name 
+---------+-----------------+----------
+ public  | product_catalog | default
+(1 row)
+
+EXECUTE spocktab('employee_directory'); -- Expect employee_directory in default set
+ nspname |      relname       | set_name 
+---------+--------------------+----------
+ public  | employee_directory | default
+(1 row)
+
+EXECUTE spocktab('sales_data'); -- Expect sales_data in default set
+ nspname |  relname   | set_name 
+---------+------------+----------
+ public  | sales_data | default
+(1 row)
+
+EXECUTE spocktab('concurrent_idx_tbl'); -- Expect sales_data in default set
+ nspname |      relname       |      set_name       
+---------+--------------------+---------------------
+ public  | concurrent_idx_tbl | default_insert_only
+(1 row)
+

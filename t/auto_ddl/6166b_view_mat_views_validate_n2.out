@@ -1,0 +1,408 @@
+-- Validations on n2
+-- Validate structure and data in views
+-- Validations
+-- Validate structure and data in views
+-- Validation for view_test_1
+\d+ test_schema.view_test_1
+                              View "test_schema.view_test_1"
+ Column |         Type          | Collation | Nullable | Default | Storage  | Description 
+--------+-----------------------+-----------+----------+---------+----------+-------------
+ id     | integer               |           |          |         | plain    | 
+ name   | character varying(50) |           |          |         | extended | 
+ age    | integer               |           |          |         | plain    | 
+View definition:
+ SELECT id,
+    name,
+    age
+   FROM test_schema.test_tbl
+  WHERE age > 25;
+
+-- Expect 2 rows: Alice, Carol
+SELECT * FROM test_schema.view_test_1 ORDER BY id; 
+ id | name  | age 
+----+-------+-----
+  1 | Alice |  30
+  3 | Carol |  35
+(2 rows)
+
+-- Validation for view_test_2
+\d+ test_schema.view_test_2
+                              View "test_schema.view_test_2"
+ Column |         Type          | Collation | Nullable | Default | Storage  | Description 
+--------+-----------------------+-----------+----------+---------+----------+-------------
+ id     | integer               |           |          |         | plain    | 
+ name   | character varying(50) |           |          |         | extended | 
+ age    | integer               |           |          |         | plain    | 
+View definition:
+ SELECT id,
+    name,
+    age
+   FROM test_schema.test_tbl
+  WHERE age > 30;
+
+-- Expect 1 row: Carol
+SELECT * FROM test_schema.view_test_2 ORDER BY id; 
+ id | name  | age 
+----+-------+-----
+  3 | Carol |  35
+(1 row)
+
+-- Validation for view_recursive
+\d+ test_schema.view_recursive
+                     View "test_schema.view_recursive"
+ Column |  Type   | Collation | Nullable | Default | Storage | Description 
+--------+---------+-----------+----------+---------+---------+-------------
+ n      | integer |           |          |         | plain   | 
+View definition:
+ WITH RECURSIVE cte AS (
+         SELECT 1 AS n
+        UNION ALL
+         SELECT cte_1.n + 1
+           FROM cte cte_1
+          WHERE cte_1.n < 5
+        )
+ SELECT n
+   FROM cte;
+
+-- Expect 5 rows: 1, 2, 3, 4, 5
+SELECT * FROM test_schema.view_recursive ORDER BY n; 
+ n 
+---
+ 1
+ 2
+ 3
+ 4
+ 5
+(5 rows)
+
+-- Validation for view_with_options
+\d+ test_schema.view_with_options
+                           View "test_schema.view_with_options"
+ Column |         Type          | Collation | Nullable | Default | Storage  | Description 
+--------+-----------------------+-----------+----------+---------+----------+-------------
+ id     | integer               |           |          |         | plain    | 
+ name   | character varying(50) |           |          |         | extended | 
+ age    | integer               |           |          |         | plain    | 
+View definition:
+ SELECT id,
+    name,
+    age
+   FROM test_schema.test_tbl;
+Options: security_barrier=true
+
+-- Expect 3 rows: Alice, Bob, Carol
+SELECT * FROM test_schema.view_with_options ORDER BY id; 
+ id | name  | age 
+----+-------+-----
+  1 | Alice |  30
+  2 | Bob   |  25
+  3 | Carol |  35
+(3 rows)
+
+-- Validation for view_with_check_option
+\d+ test_schema.view_with_check_option
+                        View "test_schema.view_with_check_option"
+ Column |         Type          | Collation | Nullable | Default | Storage  | Description 
+--------+-----------------------+-----------+----------+---------+----------+-------------
+ id     | integer               |           |          |         | plain    | 
+ name   | character varying(50) |           |          |         | extended | 
+ age    | integer               |           |          |         | plain    | 
+View definition:
+ SELECT id,
+    name,
+    age
+   FROM test_schema.test_tbl
+  WHERE age > 25;
+Options: check_option=local
+
+-- Expect 2 rows: Alice, Carol
+SELECT * FROM test_schema.view_with_check_option ORDER BY id; 
+ id | name  | age 
+----+-------+-----
+  1 | Alice |  30
+  3 | Carol |  35
+(2 rows)
+
+-- Validation for mv_test_view
+\d+ test_schema.mv_test_view
+                                     Materialized view "test_schema.mv_test_view"
+ Column |         Type          | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+--------+-----------------------+-----------+----------+---------+----------+-------------+--------------+-------------
+ id     | integer               |           |          |         | plain    |             |              | 
+ name   | character varying(50) |           |          |         | extended |             |              | 
+ age    | integer               |           |          |         | plain    |             |              | 
+View definition:
+ SELECT id,
+    name,
+    age
+   FROM test_schema.test_tbl
+  WHERE age > 30;
+Access method: heap
+
+-- Expect 1 row: Carol
+SELECT * FROM test_schema.mv_test_view ORDER BY id; 
+ id | name  | age 
+----+-------+-----
+  3 | Carol |  35
+(1 row)
+
+-- Validation for mv_test_view_nodata
+\d+ test_schema.mv_test_view_nodata
+                                  Materialized view "test_schema.mv_test_view_nodata"
+ Column |         Type          | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+--------+-----------------------+-----------+----------+---------+----------+-------------+--------------+-------------
+ id     | integer               |           |          |         | plain    |             |              | 
+ name   | character varying(50) |           |          |         | extended |             |              | 
+ age    | integer               |           |          |         | plain    |             |              | 
+View definition:
+ SELECT id,
+    name,
+    age
+   FROM test_schema.test_tbl
+  WHERE age > 30;
+Access method: heap
+
+-- Expect 1 row: Carol
+SELECT * FROM test_schema.mv_test_view_nodata ORDER BY id; 
+ id | name  | age 
+----+-------+-----
+  3 | Carol |  35
+(1 row)
+
+-- Validation for mv_test_view_colnames
+\d+ test_schema.mv_test_view_colnames
+                                   Materialized view "test_schema.mv_test_view_colnames"
+   Column    |         Type          | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+-------------+-----------------------+-----------+----------+---------+----------+-------------+--------------+-------------
+ person_id   | integer               |           |          |         | plain    |             |              | 
+ person_name | character varying(50) |           |          |         | extended |             |              | 
+ person_age  | integer               |           |          |         | plain    |             |              | 
+View definition:
+ SELECT id AS person_id,
+    name AS person_name,
+    age AS person_age
+   FROM test_schema.test_tbl
+  WHERE age > 30;
+Access method: heap
+
+-- Expect 1 row: Carol
+SELECT * FROM test_schema.mv_test_view_colnames ORDER BY person_id; 
+ person_id | person_name | person_age 
+-----------+-------------+------------
+         3 | Carol       |         35
+(1 row)
+
+-- Validation for mv_test_view_method
+\d+ test_schema.mv_test_view_method
+                                  Materialized view "test_schema.mv_test_view_method"
+ Column |         Type          | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+--------+-----------------------+-----------+----------+---------+----------+-------------+--------------+-------------
+ id     | integer               |           |          |         | plain    |             |              | 
+ name   | character varying(50) |           |          |         | extended |             |              | 
+ age    | integer               |           |          |         | plain    |             |              | 
+View definition:
+ SELECT id,
+    name,
+    age
+   FROM test_schema.test_tbl
+  WHERE age > 30;
+Access method: heap
+
+-- Expect 1 row: Carol
+SELECT * FROM test_schema.mv_test_view_method ORDER BY id; 
+ id | name  | age 
+----+-------+-----
+  3 | Carol |  35
+(1 row)
+
+-- Validation for mv_test_view_storage
+\d+ test_schema.mv_test_view_storage
+                                 Materialized view "test_schema.mv_test_view_storage"
+ Column |         Type          | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+--------+-----------------------+-----------+----------+---------+----------+-------------+--------------+-------------
+ id     | integer               |           |          |         | plain    |             |              | 
+ name   | character varying(50) |           |          |         | extended |             |              | 
+ age    | integer               |           |          |         | plain    |             |              | 
+View definition:
+ SELECT id,
+    name,
+    age
+   FROM test_schema.test_tbl
+  WHERE age > 30;
+Access method: heap
+Options: fillfactor=70
+
+-- Expect 1 row: Carol
+SELECT * FROM test_schema.mv_test_view_storage ORDER BY id; 
+ id | name  | age 
+----+-------+-----
+  3 | Carol |  35
+(1 row)
+
+-- Validation for mv_test_view_tablespace
+\d+ test_schema.mv_test_view_tablespace
+                                Materialized view "test_schema.mv_test_view_tablespace"
+ Column |         Type          | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+--------+-----------------------+-----------+----------+---------+----------+-------------+--------------+-------------
+ id     | integer               |           |          |         | plain    |             |              | 
+ name   | character varying(50) |           |          |         | extended |             |              | 
+ age    | integer               |           |          |         | plain    |             |              | 
+View definition:
+ SELECT id,
+    name,
+    age
+   FROM test_schema.test_tbl
+  WHERE age > 30;
+Access method: heap
+
+-- Expect 1 row: Carol
+SELECT * FROM test_schema.mv_test_view_tablespace ORDER BY id; 
+ id | name  | age 
+----+-------+-----
+  3 | Carol |  35
+(1 row)
+
+-- Validation for view_test_default
+\d+ public.view_test_default
+                         View "public.view_test_default"
+   Column    |  Type   | Collation | Nullable | Default | Storage  | Description 
+-------------+---------+-----------+----------+---------+----------+-------------
+ id          | integer |           |          |         | plain    | 
+ description | text    |           |          |         | extended | 
+View definition:
+ SELECT id,
+    description
+   FROM test_schema.test_tbl_no_pk
+  WHERE id > 1;
+
+-- Expect 1 row: Second description
+SELECT * FROM public.view_test_default ORDER BY id; 
+ id |    description     
+----+--------------------
+  2 | Second description
+(1 row)
+
+-- Validation for view_depends_on_default
+\d+ test_schema.view_depends_on_default
+                   View "test_schema.view_depends_on_default"
+   Column    |  Type   | Collation | Nullable | Default | Storage  | Description 
+-------------+---------+-----------+----------+---------+----------+-------------
+ id          | integer |           |          |         | plain    | 
+ description | text    |           |          |         | extended | 
+View definition:
+ SELECT id,
+    description
+   FROM view_test_default
+  WHERE id > 1;
+
+-- Expect 1 row: Second description
+SELECT * FROM test_schema.view_depends_on_default ORDER BY id; 
+ id |    description     
+----+--------------------
+  2 | Second description
+(1 row)
+
+-- Validation for mv_depends_on_test_schema
+\d+ public.mv_depends_on_test_schema
+                                 Materialized view "public.mv_depends_on_test_schema"
+ Column |         Type          | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+--------+-----------------------+-----------+----------+---------+----------+-------------+--------------+-------------
+ id     | integer               |           |          |         | plain    |             |              | 
+ name   | character varying(50) |           |          |         | extended |             |              | 
+ age    | integer               |           |          |         | plain    |             |              | 
+View definition:
+ SELECT id,
+    name,
+    age
+   FROM test_schema.mv_test_view;
+Access method: heap
+
+-- Expect 1 row: Carol
+SELECT * FROM public.mv_depends_on_test_schema ORDER BY id; 
+ id | name  | age 
+----+-------+-----
+  3 | Carol |  35
+(1 row)
+
+-- Validation for view_depends_on_mv
+\d+ public.view_depends_on_mv
+                             View "public.view_depends_on_mv"
+ Column |         Type          | Collation | Nullable | Default | Storage  | Description 
+--------+-----------------------+-----------+----------+---------+----------+-------------
+ id     | integer               |           |          |         | plain    | 
+ name   | character varying(50) |           |          |         | extended | 
+View definition:
+ SELECT id,
+    name
+   FROM mv_depends_on_test_schema
+  WHERE age > 30;
+
+-- Expect 1 row: Carol
+SELECT * FROM public.view_depends_on_mv ORDER BY id; 
+ id | name  
+----+-------
+  3 | Carol
+(1 row)
+
+-- Validation for mv_depends_on_mv
+\d+ public.mv_depends_on_mv
+                                      Materialized view "public.mv_depends_on_mv"
+ Column |         Type          | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+--------+-----------------------+-----------+----------+---------+----------+-------------+--------------+-------------
+ id     | integer               |           |          |         | plain    |             |              | 
+ name   | character varying(50) |           |          |         | extended |             |              | 
+View definition:
+ SELECT id,
+    name
+   FROM view_depends_on_mv;
+Access method: heap
+
+-- Expect 1 row: Carol
+SELECT * FROM public.mv_depends_on_mv ORDER BY id; 
+ id | name  
+----+-------
+  3 | Carol
+(1 row)
+
+-- Drop views and materialized views
+-- Drop the materialized view in the public schema that depends on a view in the test_schema
+DROP MATERIALIZED VIEW IF EXISTS public.mv_depends_on_test_schema CASCADE;
+NOTICE:  drop cascades to 2 other objects
+DETAIL:  drop cascades to view view_depends_on_mv
+drop cascades to materialized view mv_depends_on_mv
+INFO:  DDL statement replicated.
+DROP MATERIALIZED VIEW
+-- Drop the view in the test_schema that depends on another view in the public schema
+DROP VIEW test_schema.view_depends_on_default CASCADE;
+INFO:  DDL statement replicated.
+DROP VIEW
+-- Drop all other views and materialized views
+DROP VIEW IF EXISTS test_schema.view_test_1, 
+                          test_schema.view_test_2, 
+                          test_schema.view_recursive, 
+                          test_schema.view_with_options, 
+                          test_schema.view_with_check_option, 
+                          public.view_test_default CASCADE;
+INFO:  DDL statement replicated.
+DROP VIEW
+DROP MATERIALIZED VIEW IF EXISTS test_schema.mv_test_view, 
+                                test_schema.mv_test_view_colnames, 
+                                test_schema.mv_test_view_method, 
+                                test_schema.mv_test_view_storage, 
+                                test_schema.mv_test_view_tablespace CASCADE;
+INFO:  DDL statement replicated.
+DROP MATERIALIZED VIEW
+-- Drop the tables used for views and materialized views
+DROP TABLE IF EXISTS test_schema.test_tbl CASCADE;
+NOTICE:  drop cascades to materialized view test_schema.mv_test_view_nodata
+NOTICE:  drop cascades to table test_schema.test_tbl membership in replication set default
+INFO:  DDL statement replicated.
+DROP TABLE
+DROP TABLE IF EXISTS test_schema.test_tbl_no_pk CASCADE;
+NOTICE:  drop cascades to table test_schema.test_tbl_no_pk membership in replication set default_insert_only
+INFO:  DDL statement replicated.
+DROP TABLE
+-- Drop the schema
+DROP SCHEMA test_schema CASCADE;
+INFO:  DDL statement replicated.
+DROP SCHEMA

@@ -2,7 +2,7 @@
 PREPARE spocktab AS SELECT nspname, relname, set_name FROM spock.tables WHERE relname LIKE '%' || $1 || '%' ORDER BY relid;
 
 -----------------------------
--- Hash Partitioning Examples
+-- Hash Partitioning
 -----------------------------
 
 -- Create a hash partitioned table with primary key
