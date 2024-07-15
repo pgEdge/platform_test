@@ -257,18 +257,28 @@ def remove_table(table_name: str) -> None:
 def mod_and_repair(
         column: tuple[str, str], table_name: str,
         cluster = os.getenv("EDGE_CLUSTER"), home_dir = os.getenv("NC_DIR"),
-        where = "mod(id, 3) = 0", set: str = None, verbose = False
+        action = "update", where = "mod(id, 3) = 0",
+        set: str = None, verbose = False
     ) -> tuple[int, str]:
 
     if not set:
         set = generate_item(column[1])
     env_data = get_env()
 
-    psql_qry = f"""
-        UPDATE {table_name}
-        SET {column[0]} = '{set}'
-        WHERE {where}
-    """
+    if action not in {"update", "delete"}:
+        util_test.exit_message(f"Invalid option for action: {action}")
+
+    if action == "update":
+        psql_qry = f"""
+            UPDATE {table_name}
+            SET {column[0]} = '{set}'
+            WHERE {where}
+        """
+    if action == "delete":
+        psql_qry = f"""
+            DELETE FROM {table_name}
+            WHERE {where}
+        """
 
     msg = f"""
 Running mod_and_repair with options:

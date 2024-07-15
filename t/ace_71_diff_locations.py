@@ -32,6 +32,7 @@ form = [
 #   evenly distributed (dense)
 #   extra rows at end
 #   extra rows in middle (tested with uuid)
+#   mismatched block-rows
 
 # Generates Tables
 generate_table("t1", form, 25000)
@@ -45,11 +46,11 @@ if res.returncode == 1 or "TABLES MATCH OK" not in res.stdout:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Matching Tables (t1)", 1)
 print("*" * 100)
 
-cmd_node = f"ace table-diff {cluster} public.t3"
+cmd_node = f"ace table-diff {cluster} public.t2"
 res=util_test.run_cmd("Matching Tables", cmd_node, f"{home_dir}")
 util_test.printres(res)
 if res.returncode == 1 or "TABLES MATCH OK" not in res.stdout:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Matching Tables (t3)", 1)
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Matching Tables (t2)", 1)
 print("*" * 100)
 
 # Start Checks
@@ -89,7 +90,7 @@ if code == 1:
 # Lines Inserted into Middle
 insert_into("t2", form, 2000, nodes=[1], pkey="uuid")
 insert_into("t2", form, 13000, pkey="uuid")
-code, msg = mod_and_repair(column, "t3", cluster, home_dir, where="false")
+code, msg = mod_and_repair(column, "t2", cluster, home_dir, where="false")
 if code == 1:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - {msg}: lines inserted at middle")
 
@@ -97,6 +98,11 @@ if code == 1:
 # the table are offset from eachother. The intent here was to simlulate the case where some lines are not replaicated but
 # replication continues after. In this case with either serials or snowflake sequences the specific key is copied over so
 # the offset issue doesn't happen. As a result uuids more accuratly simulate the times and work that would happen in this case.
+
+# Mismatched Block Rows
+code, msg = mod_and_repair(column, "t1", cluster, home_dir, action="delete", where="mod(id, 10) = 0")
+if code == 1:
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - {msg}: mismatched block rows")
 
 # Removes Table
 remove_table("t1")
