@@ -1,3 +1,9 @@
+# This test case (and the other spock_# tests) expect to be run against a two node cluster.
+# If it fails with an error: pg_reload_conf \n----------------\n t\n(1 row)\n\nSet GUC snowflake.node to 1\n[\n  {\n  ...
+# you are probably running against a 3 node cluster.
+# Per conversation with Cady, we may want to use a new setup script written in .py that uses the same
+# logic as 8000a/8000b, but that uses the environment variable values. 
+
 import os, util_test, subprocess
 
 ## Print Script
