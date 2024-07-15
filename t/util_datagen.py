@@ -96,14 +96,36 @@ def get_env():
 def get_seed():
     return random.randint(-32768, 32767)
 
+# Gets pkey statment
+def pkey_msgs():
+    return {
+        "serial": "id SERIAL PRIMARY KEY,",
+        "uuid": "id CHAR(36) PRIMARY KEY DEFAULT (gen_random_uuid()),",
+        "comp": "rand_id INTEGER NOT NULL, id SERIAL NOT NULL,",
+        "none": ""
+    }
+
 # Valid pkey options
 def valid_pkeys():
-    return ("serial", "uuid", "comp")
+    return pkey_msgs().keys()
 
 # Get all nodes
 def get_all_nodes() -> list[int]:
     num_nodes = get_env()["num_nodes"]
     return [num for num in range(1,num_nodes+1)]
+
+# Gets all connections and cursors
+def get_psql_cons(nodes: list[int] = get_all_nodes()) -> tuple[list, list]:
+    env_data = get_env()
+
+    try:
+        cons = [util_test.get_pg_con(env_data["host"], env_data["dbname"], env_data["port"]+n-1, env_data["pw"], env_data["usr"])
+                for n in nodes]
+        curs = [con.cursor() for con in cons]
+    except Exception as e:
+        util_test.exit_message(f"Couldn't establish connection: {e}")
+
+    return cons, curs
 
 # Function to generate table into psql servers
 def generate_table(
@@ -112,8 +134,6 @@ def generate_table(
         seed: int = None, nodes: list[int] = get_all_nodes()
     ) -> None:
 
-    # Load env_data into dict to prevent possible variable name conflicts
-    env_data = get_env()
     if size > 1000:
         checkpoint = size/10
         stars = 1
@@ -125,7 +145,7 @@ def generate_table(
         util_test.exit_message(f"invalid option for pkey: {pkey}")
 
     comp_pkey = pkey == "comp"
-    pkey_msg = "id SERIAL PRIMARY KEY" if pkey == "serial" else "id CHAR(36) PRIMARY KEY DEFAULT (gen_random_uuid())"
+    pkey_msg = pkey_msgs()[pkey]
 
     msg = f"""
 Running generate table with args:
@@ -140,19 +160,14 @@ Running generate table with args:
     random.seed(seed)
 
     # Connect to PostgreSQL
-    try:
-        cons = [util_test.get_pg_con(env_data["host"], env_data["dbname"], env_data["port"]+n-1, env_data["pw"], env_data["usr"])
-                for n in nodes]
-        curs = [con.cursor() for con in cons]
-    except Exception as e:
-        util_test.exit_message(f"Couldn't establish connection: {e}")
+    cons, curs = get_psql_cons(nodes)
 
     # Create table
     psql_qry = f"""
         DROP TABLE IF EXISTS {table_name};
         CREATE TABLE {table_name} (
             {
-                "rand_id INTEGER NOT NULL, id SERIAL NOT NULL, " if comp_pkey else f"{pkey_msg}, "
+                pkey_msg
             } {
                 ', '.join([
                     f"{row_name} {row_tpye}" for row_name, row_tpye in form
@@ -221,16 +236,8 @@ Running generate table with args:
 
 
 def remove_table(table_name: str) -> None:
-    # Load env_data into dict to prevent possible variable name conflicts
-    env_data = get_env()
-
     # Connect to PostgreSQL
-    try:
-        cons = [util_test.get_pg_con(env_data["host"], env_data["dbname"], env_data["port"]+n, env_data["pw"], env_data["usr"])
-                for n in range(env_data["num_nodes"])]
-        curs = [con.cursor() for con in cons]
-    except Exception as e:
-        util_test.exit_message(f"Couldn't establish connection: {e}")
+    cons, curs = get_psql_cons()
 
     # Remove table
     try:
@@ -337,9 +344,6 @@ def insert_into(
         seed: int = None, nodes: list[int] = get_all_nodes()
     ) -> None:
 
-    # Load env_data into dict to prevent possible variable name conflicts
-    env_data = get_env()
-
     if seed is None:
         seed = get_seed()
 
@@ -360,12 +364,7 @@ Running insert into with args:
     comp_pkey = pkey == "comp"
 
     # Connect to PostgreSQL
-    try:
-        cons = [util_test.get_pg_con(env_data["host"], env_data["dbname"], env_data["port"]+n-1, env_data["pw"], env_data["usr"])
-                for n in nodes]
-        curs = [con.cursor() for con in cons]
-    except Exception as e:
-        util_test.exit_message(f"Couldn't establish connection: {e}")
+    cons, curs = get_psql_cons(nodes)
 
     if comp_pkey:
         form = [("rand_id", "INTEGER")] + form

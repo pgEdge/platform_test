@@ -145,13 +145,13 @@ def write_nofail_psql(cmd,host,dbname,port,pw,usr):
     return ret
 
 ## Read psql
-def read_psql(cmd,host,dbname,port,pw,usr):
+def read_psql(cmd,host,dbname,port,pw,usr,indent=None):
     con = get_pg_con(host,dbname,port,pw,usr)
     try:
         cur = con.cursor()
         cur.execute(cmd)
         print(cmd)
-        ret = json.dumps(cur.fetchall())
+        ret = json.dumps(cur.fetchall(), indent=indent)
         cur.close()
     except Exception as e:
         exit_message(e)
