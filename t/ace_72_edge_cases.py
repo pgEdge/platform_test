@@ -17,7 +17,7 @@ host=os.getenv("EDGE_HOST","localhost")
 dbname=os.getenv("EDGE_DB","lcdb")
 num_nodes=int(os.getenv("EDGE_NODES",2))
 
-# Second functionality test file: Conatains test for 
+# Second functionality test file: Conatains test for
 #   no pkey
 #   non-matching but similar schema (INT / BIGINT)
 #   non-matching but similar schema (INT / REAL)
@@ -57,12 +57,12 @@ insert_into(   "t3", form1, 10000, pkey="uuid")
 # Ensures that tables have schema diffs
 for table_name in ["t2", "t3"]:
     psql_stat = f"""
-    SELECT 
-        column_name, 
+    SELECT
+        column_name,
         data_type
-    FROM 
+    FROM
         information_schema.columns
-    WHERE 
+    WHERE
         table_name = '{table_name}';
     """
 
@@ -94,7 +94,7 @@ cmd_node = f"ace table-diff {cluster} public.t3"
 res=util_test.run_cmd("Matching Tables", cmd_node, f"{home_dir}")
 util_test.printres(res)
 if res.returncode == 1 or "TABLES MATCH OK" not in res.stdout:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Matching Tables (t2)", 1)
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Matching Tables (t3)", 1)
 print("*" * 100)
 
 # Some mod and repairs to test functionality

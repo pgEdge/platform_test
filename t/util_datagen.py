@@ -20,8 +20,8 @@ def create_full_name() -> str:
 def create_first_name() -> str:
     return random.choice(_F_NAMES_)
 
-def create_string() -> str:
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=128))
+def create_string(k=128) -> str:
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=k))
 
 def create_int() -> int:
     return random.randint(-100, 100)
@@ -126,6 +126,20 @@ def get_psql_cons(nodes: list[int] = get_all_nodes()) -> tuple[list, list]:
         util_test.exit_message(f"Couldn't establish connection: {e}")
 
     return cons, curs
+
+# Writes diff data to testing dir
+def write_diff(fname: str, data: dict) -> None:
+    diff_dir = "diffs"
+    if not os.path.exists(diff_dir):
+        os.makedirs(diff_dir)
+        print(f"Created directory {diff_dir} for diffs")
+
+    fname += "_" + create_string(k=8) + ".json"
+    diff_fname = os.path.join(diff_dir, fname)
+
+    with open(diff_fname, "w") as file:
+        json.dump(data, file, indent=2)
+        print(f"Wrote diffs to {diff_fname}")
 
 # Function to generate table into psql servers
 def generate_table(
@@ -265,7 +279,7 @@ def mod_and_repair(
         column: tuple[str, str], table_name: str,
         cluster = os.getenv("EDGE_CLUSTER"), home_dir = os.getenv("NC_DIR"),
         action = "update", where = "mod(id, 3) = 0",
-        set: str = None, verbose = False
+        set: str = None, verbose = False, grabDiffs = False
     ) -> tuple[int, str]:
 
     if not set:
@@ -306,9 +320,18 @@ Running mod_and_repair with options:
     if verbose:
         util_test.printres(res)
         print("*" * 100)
+    
+    try:
+        diff_file, diff_data = util_test.get_diff_data(res.stdout)
+
+        if grabDiffs:
+            write_diff("MaR_run1", diff_data)
+
+    except Exception:
+        pass
+
     if res.returncode == 1 or "TABLES DO NOT MATCH" not in res.stdout:
         return 1, "Couldn't find difference in tables"
-    diff_file, _ = util_test.get_diff_data(res.stdout)
     diff_time = time.time() - start
 
     # Use table repair with n1 as the source of truth
@@ -329,6 +352,16 @@ Running mod_and_repair with options:
     if verbose:
         util_test.printres(res)
         print("*" * 100)
+    
+    try:
+        diff_file, diff_data = util_test.get_diff_data(res.stdout)
+
+        if grabDiffs:
+            write_diff("MaR_run2", diff_data)
+
+    except Exception:
+        pass
+
     if res.returncode == 1 or "TABLES MATCH OK" not in res.stdout:
         return 1, "Differences in tables not fixed"
     rerun_time = time.time() - start

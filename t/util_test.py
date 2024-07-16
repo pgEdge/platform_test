@@ -242,7 +242,7 @@ def get_diff_data(stdout: str) -> tuple[str, dict]:
         diff_file_local = match.group(0)
         diff_file_path = os.path.join(os.getenv("EDGE_HOME_DIR"), diff_file_local)
     else:
-        exit_message(f"Fail - {os.path.basename(__file__)} - Couldn't find diff file", 1)
+        raise Exception("Couldn't find diff file")
 
     diff_file = open(diff_file_path, "r")
     diff_data = json.load(diff_file)
