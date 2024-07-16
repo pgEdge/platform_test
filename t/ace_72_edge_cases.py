@@ -17,7 +17,7 @@ host=os.getenv("EDGE_HOST","localhost")
 dbname=os.getenv("EDGE_DB","lcdb")
 num_nodes=int(os.getenv("EDGE_NODES",2))
 
-# Second functionality test file: Conatains test for
+# Third functionality test file: Conatains test for
 #   no pkey
 #   non-matching but similar schema (INT / BIGINT)
 #   non-matching but similar schema (INT / REAL)
