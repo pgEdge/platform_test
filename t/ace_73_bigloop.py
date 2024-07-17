@@ -10,12 +10,8 @@ util_test.set_env()
 home_dir = os.getenv("NC_DIR")
 cluster = os.getenv("EDGE_CLUSTER")
 
-port=int(os.getenv("EDGE_START_PORT",6432))
-usr=os.getenv("EDGE_USERNAME","lcusr")
-pw=os.getenv("EDGE_PASSWORD","password")
-host=os.getenv("EDGE_HOST","localhost")
-dbname=os.getenv("EDGE_DB","lcdb")
-num_nodes=int(os.getenv("EDGE_NODES",2))
+# WARNING: Full test takes super long
+# run with 3 nodes and numbers+obj commented out took around 26 mins
 
 # Fourth functionality test file: Conatains large loop for all combinations of
 #   all possible dataypes

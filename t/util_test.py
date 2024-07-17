@@ -1,4 +1,4 @@
-import sys, os, psycopg, json, subprocess, shutil, re
+import sys, os, psycopg, json, subprocess, shutil, re, csv
 from dotenv import load_dotenv
 
 EXIT_PASS = 0
@@ -230,12 +230,18 @@ def needle_in_haystack(haystack, needle):
 
 
 # *****************************************************************************
-## Function to grab diff file and data from stdout
+## Function to grab diff file and data from stdout (might be inconsistant with csvs)
 # *****************************************************************************
 
-def get_diff_data(stdout: str) -> tuple[str, dict]:
+def get_diff_data(stdout: str, type = "json") -> tuple[str, dict]:
+    if type not in ["json", "csv"]:
+        raise Exception(f"Type should be json or csv, not {type}")
+
     # current pattern expects `diffs/YYYY-MM-DD_hh:mm:ss/diff.json`
-    file_pattern = r'diffs/\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}/diff\.json'
+    if type == "json":
+        file_pattern = r'diffs/\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}/diff.json'
+    if type == "csv":
+        file_pattern = r'diffs/\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}/n1__n2/'
     match = re.search(file_pattern, stdout)
 
     if match:
@@ -244,8 +250,29 @@ def get_diff_data(stdout: str) -> tuple[str, dict]:
     else:
         raise Exception("Couldn't find diff file")
 
-    diff_file = open(diff_file_path, "r")
-    diff_data = json.load(diff_file)
+    if type == "json":
+        with open(diff_file_path, "r") as diff_file:
+            diff_data = json.load(diff_file)
+
+    if type == "csv":
+        diff_data = dict()
+        fn1 = os.path.join(diff_file_path, "n1.csv")
+        fn2 = os.path.join(diff_file_path, "n2.csv")
+        fn3 = os.path.join(diff_file_path, "n3.csv")
+
+        with open(fn1, "r") as diff_file:
+            data = csv.DictReader(diff_file)
+            diff_data["n1"] = [row for row in data]
+
+        with open(fn2, "r") as diff_file:
+            data = csv.DictReader(diff_file)
+            diff_data["n2"] = [row for row in data]
+
+        if os.path.exists(fn3):
+            with open(fn3, "r") as diff_file:
+                data = csv.DictReader(diff_file)
+                diff_data["n3"] = [row for row in data]
+
     return diff_file_local, diff_data
 
 
