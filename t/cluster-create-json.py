@@ -23,7 +23,8 @@ dbname=os.getenv("EDGE_DB","lcdb")
 file_name = (f"{cluster_name}.json")
 
 #
-# Confirm that cluster json-template creates a template file:
+# Confirm that cluster json-template creates a template file by creating a file that uses the dbname
+# from the config.env file:
 # 
 print(f"home_dir = {home_dir}\n")
 command = (f"cluster json-template {cluster_name} {dbname} {num_nodes} {usr} {pw} {pgv} {port}")
