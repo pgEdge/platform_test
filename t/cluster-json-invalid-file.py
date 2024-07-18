@@ -20,20 +20,28 @@ repset=os.getenv("EDGE_REPSET","demo-repset")
 spockpath=os.getenv("EDGE_SPOCK_PATH")
 dbname=os.getenv("EDGE_DB","lcdb")
 
-file_name = (f"{cluster_name}.json")
+
+## We're going to use names that aren't used by other tests to avoid confusion.
+#  This test will also be self-contained...
+
+tmpcluster = "resources"
+file_name = (f"{tmpcluster}.json")
 print(file_name)
 #
 
 # Create a json file that we'll truncate with os.truncate:
 print(f"home_dir = {home_dir}\n")
-command = (f"cluster json-template {cluster_name} {dbname} {num_nodes} {usr} {pw} {pgv} {port}")
+command = (f"cluster json-template {tmpcluster} {dbname} {num_nodes} {usr} {pw} {pgv} {port}")
 res=util_test.run_nc_cmd("This command should create a json file that defines a cluster", command, f"{home_dir}")
 print(f"res = {res}\n")
 print("*"*100)
 
+if not file_name:
+    util_test.EXIT_FAIL
+
 # Corrupt the file with os.truncate:
 
-path=(f"{cluster_dir}/{file_name}")
+path=(f"{home_dir}/cluster/{tmpcluster}/{file_name}")
 file_info = os.truncate(path, 150)
 print(f"path = {path}")
 print(f"The call to os.truncate returns = {file_info}")
@@ -41,18 +49,12 @@ print(f"The call to os.truncate returns = {file_info}")
 # Confirm that if the json template is invalid, cluster json-validate will catch the error:
 # 
 print(f"home_dir = {home_dir}\n")
-command = (f"cluster json-validate {cluster_name}")
-res=util_test.run_nc_cmd("This command should validate the existence of a json file that defines a cluster", command, f"{home_dir}")
-print(f"cluster_dir = {cluster_dir}\n")
-print(f"res = {res}\n")
+command = (f"cluster json-validate {tmpcluster}")
+results=util_test.run_nc_cmd("This command should validate a json file that defines a cluster", command, f"{home_dir}")
+print(results)
 print("*"*100)
-#
-# Needle and Haystack
-# Confirm the command works by looking for the file:
 
-if "Unable to load cluster def file" not in str(res) or res.returncode == 0:
-    util_test.EXIT_FAIL
-else:
+
+if "Expecting property name" in str(res) or res.returncode == 1:
     util_test.EXIT_PASS
-
 
