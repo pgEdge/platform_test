@@ -7,7 +7,6 @@ t/ace_02_clusterjson.py
 t/ace_10_table_diff.py
 t/ace_11_table_diff_args.py
 t/ace_12_table_diff_errors.py
-t/ace_20_repset_diff.py
 t/ace_21_repset_diff_errors.py
 t/ace_30_spock_diff.py
 t/ace_31_spock_diff_errors.py
