@@ -290,9 +290,13 @@ def mod_and_repair(
         util_test.exit_message(f"Invalid option for action: {action}")
 
     if action == "update":
+        if column[1] == "FLOAT[]":
+            set = f"ARRAY{set}::FLOAT[]"
+        else:
+            set = f"'{set}'"
         psql_qry = f"""
             UPDATE {table_name}
-            SET {column[0]} = '{set}'
+            SET {column[0]} = {set}
             WHERE {where}
         """
     if action == "delete":
