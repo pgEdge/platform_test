@@ -46,6 +46,9 @@ generate_table("t2", basic_form, 10000)
 generate_table("t3", basic_form,   100, pkey="comp")
 generate_table("t4", basic_form, 10000, pkey="comp")
 
+total_counter = 0
+fails = list()
+
 # Assert that all tables match
 cmd_node = f"ace table-diff {cluster} public.t1"
 res=util_test.run_cmd("Matching Tables", cmd_node, f"{home_dir}")
@@ -78,9 +81,10 @@ print("*" * 100)
 
 for table_name in ["t2", "t4"]:
     for column in basic_form:
+        total_counter += 1
         code, msg = mod_and_repair(column, table_name, cluster, home_dir, where="small_int < -80")
         if code == 1:
-            util_test.exit_message(f"Fail - {os.path.basename(__file__)} - {msg} on {column} in {table_name}")
+            fails.append(f"Fail - {os.path.basename(__file__)} - {msg} on {column} in {table_name}")
 
 # Removes Tables
 remove_table("t1")
@@ -99,8 +103,19 @@ if res.returncode == 1 or "TABLES MATCH OK" not in res.stdout:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Matching Tables", 1)
 print("*" * 100)
 
+total_counter += 1
 code, msg = mod_and_repair(("\"customerIndex\"", "INTEGER"), "t1", cluster, home_dir, where="mod(id,15) = 0")
 if code == 1:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - {msg} on \'customerIndex\' in t1")
+    fails.append(f"Fail - {os.path.basename(__file__)} - {msg} on \'customerIndex\' in t1")
+
+remove_table("t1")
+
+if fails:
+    print(f"Failed {len(fails)} of {total_counter} tests:")
+    for fail in fails:
+        print(f"  {fail}")
+    util_test.exit_message("")
+else:
+    print(f"Passed all {total_counter} mod_and_repairs!")
 
 util_test.exit_message(f"Pass - {os.path.basename(__file__)}", 0)

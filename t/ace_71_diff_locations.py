@@ -38,6 +38,9 @@ form = [
 generate_table("t1", form, 25000)
 generate_table("t2", form, 10000, pkey="uuid")
 
+total_counter = 0
+fails = list()
+
 # Assert that all tables match
 cmd_node = f"ace table-diff {cluster} public.t1"
 res=util_test.run_cmd("Matching Tables", cmd_node, f"{home_dir}")
@@ -57,42 +60,49 @@ print("*" * 100)
 column = ("float_value", "REAL")
 
 # Start
+total_counter += 1
 code, msg = mod_and_repair(column, "t1", cluster, home_dir, where="id < 2000")
 if code == 1:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - {msg}: block at start")
+    fails.append(f"Fail - {os.path.basename(__file__)} - {msg}: block at start")
 
 # Middle
+total_counter += 1
 code, msg = mod_and_repair(column, "t1", cluster, home_dir, where="10000 < id and id < 12000")
 if code == 1:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - {msg}: block in middle")
+    fails.append(f"Fail - {os.path.basename(__file__)} - {msg}: block in middle")
 
 # End
+total_counter += 1
 code, msg = mod_and_repair(column, "t1", cluster, home_dir, where="23000 < id")
 if code == 1:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - {msg}: block at end")
+    fails.append(f"Fail - {os.path.basename(__file__)} - {msg}: block at end")
 
 # Even (sparse)
+total_counter += 1
 code, msg = mod_and_repair(column, "t1", cluster, home_dir, where="mod(id, 27) = 0")
 if code == 1:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - {msg}: even sparse")
+    fails.append(f"Fail - {os.path.basename(__file__)} - {msg}: even sparse")
 
 # Even (dense)
+total_counter += 1
 code, msg = mod_and_repair(column, "t1", cluster, home_dir)
 if code == 1:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - {msg}: even dense")
+    fails.append(f"Fail - {os.path.basename(__file__)} - {msg}: even dense")
 
 # Lines Inserted to the End
+total_counter += 1
 insert_into("t1", form, 2000, nodes=[1])
 code, msg = mod_and_repair(column, "t1", cluster, home_dir, where="false")
 if code == 1:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - {msg}: lines inserted at end")
+    fails.append(f"Fail - {os.path.basename(__file__)} - {msg}: lines inserted at end")
 
 # Lines Inserted into Middle
+total_counter += 1
 insert_into("t2", form, 2000, nodes=[1], pkey="uuid")
 insert_into("t2", form, 13000, pkey="uuid")
 code, msg = mod_and_repair(column, "t2", cluster, home_dir, where="false")
 if code == 1:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - {msg}: lines inserted at middle")
+    fails.append(f"Fail - {os.path.basename(__file__)} - {msg}: lines inserted at middle")
 
 # Note that this was tested with uuid primary key, using this test method with serials creates a problem where huge parts of
 # the table are offset from eachother. The intent here was to simlulate the case where some lines are not replaicated but
@@ -100,12 +110,21 @@ if code == 1:
 # the offset issue doesn't happen. As a result uuids more accuratly simulate the times and work that would happen in this case.
 
 # Mismatched Block Rows
+total_counter += 1
 code, msg = mod_and_repair(column, "t1", cluster, home_dir, action="delete", where="mod(id, 10) = 0")
 if code == 1:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - {msg}: mismatched block rows")
+    fails.append(f"Fail - {os.path.basename(__file__)} - {msg}: mismatched block rows")
 
 # Removes Table
 remove_table("t1")
 remove_table("t2")
+
+if fails:
+    print(f"Failed {len(fails)} of {total_counter} tests:")
+    for fail in fails:
+        print(f"  {fail}")
+    util_test.exit_message("")
+else:
+    print(f"Passed all {total_counter} mod_and_repairs!")
 
 util_test.exit_message(f"Pass - {os.path.basename(__file__)}", 0)

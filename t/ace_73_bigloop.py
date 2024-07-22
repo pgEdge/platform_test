@@ -42,6 +42,9 @@ basic_form = [
     ("date", "TIMESTAMP"),
 ]
 
+total_counter = 0
+fails = list()
+
 for size in sizes:
     for pkey in pkeys:
 
@@ -64,14 +67,23 @@ for size in sizes:
             for column in form:
 
                 for where in wheres:
+                    total_counter += 2
                     code, msg = mod_and_repair(column, "t1", cluster, home_dir, where=where)
                     if code == 1:
-                        util_test.exit_message(f"Fail - {os.path.basename(__file__)} - {msg}\n{size} : {pkey} : quotedcols={quoted_cols} : {column} : {where}")
+                        fails.append(f"Fail - {os.path.basename(__file__)} - {msg}\n{size} : {pkey} : quotedcols={quoted_cols} : {column} : {where}")
 
                     code, msg = mod_and_repair(column, "t1", cluster, home_dir, action="delete", where=where)
                     if code == 1:
-                        util_test.exit_message(f"Fail - {os.path.basename(__file__)} - {msg}\n{size} : {pkey} : quotedcols={quoted_cols} : {column} : {where}")
+                        fails.append(f"Fail - {os.path.basename(__file__)} - {msg}\n{size} : {pkey} : quotedcols={quoted_cols} : {column} : {where}")
 
             remove_table("t1")
+
+if fails:
+    print(f"Failed {len(fails)} of {total_counter} tests:")
+    for fail in fails:
+        print(f"  {fail}")
+    util_test.exit_message("")
+else:
+    print(f"Passed all {total_counter} mod_and_repairs!")
 
 util_test.exit_message(f"Pass - {os.path.basename(__file__)}", 0)
