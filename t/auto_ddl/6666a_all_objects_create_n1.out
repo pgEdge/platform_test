@@ -1,0 +1,535 @@
+-- Create spocktab prepared statement
+PREPARE spocktab AS SELECT nspname, relname, set_name FROM spock.tables WHERE relname LIKE $1 ORDER BY relid;
+PREPARE
+-- Create schema
+CREATE SCHEMA s1;
+INFO:  DDL statement replicated.
+CREATE SCHEMA
+SET search_path TO s1;
+SET
+-- Create database
+CREATE DATABASE obj_database;
+WARNING:  This DDL statement will not be replicated.
+CREATE DATABASE
+-- Create extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+INFO:  DDL statement replicated.
+CREATE EXTENSION
+-- Create foreign data wrapper
+CREATE FOREIGN DATA WRAPPER obj_fdw;
+INFO:  DDL statement replicated.
+CREATE FOREIGN DATA WRAPPER
+-- Create server
+CREATE SERVER obj_server FOREIGN DATA WRAPPER obj_fdw;
+INFO:  DDL statement replicated.
+CREATE SERVER
+-- Create user mapping
+CREATE USER MAPPING FOR CURRENT_USER SERVER obj_server;
+INFO:  DDL statement replicated.
+CREATE USER MAPPING
+-- Create tablespace
+SET allow_in_place_tablespaces = true; -- allows to create a tablespace without a path
+SET
+CREATE TABLESPACE obj_tablespace LOCATION '';
+INFO:  DDL statement replicated.
+CREATE TABLESPACE
+-- Create role
+CREATE ROLE obj_role;
+INFO:  DDL statement replicated.
+CREATE ROLE
+-- Create publication
+CREATE PUBLICATION obj_publication FOR TABLES IN SCHEMA s1;
+INFO:  DDL statement replicated.
+CREATE PUBLICATION
+-- Create subscription
+CREATE SUBSCRIPTION obj_subscription CONNECTION '' PUBLICATION obj_publication WITH (connect = false, slot_name = NONE);
+WARNING:  subscription was created, but is not connected
+HINT:  To initiate replication, you must manually create the replication slot, enable the subscription, and refresh the subscription.
+WARNING:  This DDL statement will not be replicated.
+CREATE SUBSCRIPTION
+CREATE TYPE obj_type AS (x INT, y INT);
+INFO:  DDL statement replicated.
+CREATE TYPE
+CREATE DOMAIN obj_domain AS INT;
+INFO:  DDL statement replicated.
+CREATE DOMAIN
+-- Create cast
+CREATE FUNCTION obj_function_cast(obj_type) RETURNS INT LANGUAGE plpgsql AS $$
+BEGIN
+    RETURN $1.x + $1.y;
+END $$;
+INFO:  DDL statement replicated.
+CREATE FUNCTION
+-- Create the cast from obj_type1 to int
+CREATE CAST (obj_type AS int) WITH FUNCTION obj_function_cast(obj_type) AS IMPLICIT;
+INFO:  DDL statement replicated.
+CREATE CAST
+-- Create aggregate
+CREATE FUNCTION int4_sum(state int4, value int4) RETURNS int4 LANGUAGE internal IMMUTABLE STRICT AS 'int4pl';
+INFO:  DDL statement replicated.
+CREATE FUNCTION
+-- Create aggregate
+CREATE AGGREGATE obj_aggregate (
+    sfunc = int4_sum,
+    stype = int4,
+    basetype = int4,
+    initcond = '0'
+);
+INFO:  DDL statement replicated.
+CREATE AGGREGATE
+-- Create collation
+CREATE COLLATION obj_collation (lc_collate = 'C', lc_ctype = 'C');
+INFO:  DDL statement replicated.
+CREATE COLLATION
+-- Create conversion
+CREATE CONVERSION obj_conversion FOR 'LATIN1' TO 'UTF8' FROM iso8859_1_to_utf8;
+INFO:  DDL statement replicated.
+CREATE CONVERSION
+-- Create domain
+CREATE DOMAIN obj_domain2 AS INT CHECK (VALUE >= 0);
+INFO:  DDL statement replicated.
+CREATE DOMAIN
+-- Create foreign table
+CREATE FOREIGN TABLE obj_foreign_table (
+    id INT,
+    name TEXT
+) SERVER obj_server;
+INFO:  DDL statement replicated.
+CREATE FOREIGN TABLE
+-- Create function
+CREATE FUNCTION obj_function() RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+    RETURN NEW;
+END $$;
+INFO:  DDL statement replicated.
+CREATE FUNCTION
+-- Create index
+CREATE TABLE obj_table (id INT PRIMARY KEY, name TEXT);
+INFO:  DDL statement replicated.
+CREATE TABLE
+CREATE INDEX obj_index ON obj_table (name);
+INFO:  DDL statement replicated.
+CREATE INDEX
+-- Create language
+CREATE LANGUAGE plperl;
+INFO:  DDL statement replicated.
+CREATE EXTENSION
+-- Create materialized view
+CREATE MATERIALIZED VIEW obj_mview AS SELECT * FROM obj_table WITH NO DATA;
+WARNING:  DDL statement replicated, but could be unsafe.
+CREATE MATERIALIZED VIEW
+-- Create operator
+CREATE OPERATOR ## (
+   leftarg = path,
+   rightarg = path,
+   function = path_inter,
+   commutator = ##
+);
+INFO:  DDL statement replicated.
+CREATE OPERATOR
+-- Create operator family
+CREATE OPERATOR FAMILY obj_opfamily USING btree;
+INFO:  DDL statement replicated.
+CREATE OPERATOR FAMILY
+-- Create operator class
+CREATE OPERATOR CLASS obj_opclass FOR TYPE int4 USING btree FAMILY obj_opfamily AS
+    OPERATOR 1 < ,
+    OPERATOR 2 <= ,
+    OPERATOR 3 = ,
+    OPERATOR 4 >= ,
+    OPERATOR 5 > ,
+    FUNCTION 1 btint4cmp(int4, int4);
+INFO:  DDL statement replicated.
+CREATE OPERATOR CLASS
+-- Create policy
+CREATE POLICY obj_policy ON obj_table FOR SELECT TO PUBLIC USING (true);
+INFO:  DDL statement replicated.
+CREATE POLICY
+-- Create procedure
+CREATE PROCEDURE obj_procedure() LANGUAGE plpgsql AS $$
+BEGIN
+    RAISE NOTICE 'Procedure executed';
+END $$;
+INFO:  DDL statement replicated.
+CREATE PROCEDURE
+-- Create rule
+CREATE RULE obj_rule AS ON INSERT TO obj_table DO ALSO NOTHING;
+INFO:  DDL statement replicated.
+CREATE RULE
+-- Create text search dictionary
+CREATE TEXT SEARCH DICTIONARY obj_tsdict (
+    TEMPLATE = simple
+);
+INFO:  DDL statement replicated.
+CREATE TEXT SEARCH DICTIONARY
+-- Create text search parser
+CREATE TEXT SEARCH PARSER obj_tsparser (
+    START = prsd_start,
+    GETTOKEN = prsd_nexttoken,
+    END = prsd_end,
+    LEXTYPES = prsd_lextype
+);
+INFO:  DDL statement replicated.
+CREATE TEXT SEARCH PARSER
+-- Create text search configuration
+CREATE TEXT SEARCH CONFIGURATION obj_tsconfig (PARSER = obj_tsparser);
+INFO:  DDL statement replicated.
+CREATE TEXT SEARCH CONFIGURATION
+-- Create text search template
+CREATE TEXT SEARCH TEMPLATE obj_tstemplate (
+    INIT = dsimple_init,
+    LEXIZE = dsimple_lexize
+);
+INFO:  DDL statement replicated.
+CREATE TEXT SEARCH TEMPLATE
+-- Create transform
+CREATE TRANSFORM FOR int LANGUAGE SQL (
+    FROM SQL WITH FUNCTION prsd_lextype(internal),
+    TO SQL WITH FUNCTION int4recv(internal));
+INFO:  DDL statement replicated.
+CREATE TRANSFORM
+-- Create trigger
+CREATE TRIGGER obj_trigger AFTER INSERT ON obj_table FOR EACH ROW EXECUTE FUNCTION obj_function();
+INFO:  DDL statement replicated.
+CREATE TRIGGER
+-- Create type
+CREATE TYPE obj_composite_type AS (x INT, y INT);
+INFO:  DDL statement replicated.
+CREATE TYPE
+CREATE TYPE obj_enum AS ENUM ('red', 'green', 'blue');
+INFO:  DDL statement replicated.
+CREATE TYPE
+CREATE TYPE obj_range AS RANGE (subtype = int4range);
+INFO:  DDL statement replicated.
+CREATE TYPE
+-- Create view
+CREATE VIEW obj_view AS SELECT * FROM obj_table;
+INFO:  DDL statement replicated.
+CREATE VIEW
+-- Create group
+CREATE GROUP obj_group;
+INFO:  DDL statement replicated.
+CREATE ROLE
+-- Create event trigger
+CREATE FUNCTION obj_function_event_trigger() RETURNS event_trigger LANGUAGE plpgsql AS $$
+BEGIN
+    RAISE NOTICE 'Event trigger activated: %', tg_tag;
+END $$;
+INFO:  DDL statement replicated.
+CREATE FUNCTION
+CREATE EVENT TRIGGER obj_event_trigger ON ddl_command_start EXECUTE FUNCTION obj_function_event_trigger();
+INFO:  DDL statement replicated.
+CREATE EVENT TRIGGER
+-- Meta command validations
+-- Validate database
+\l obj_database
+                                                     List of databases
+     Name     | Owner | Encoding | Locale Provider |   Collate   |    Ctype    | ICU Locale | ICU Rules | Access privileges 
+--------------+-------+----------+-----------------+-------------+-------------+------------+-----------+-------------------
+ obj_database | rocky | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           | 
+(1 row)
+
+-- Validate extension
+\dx "uuid-ossp"
+                          List of installed extensions
+   Name    | Version | Schema |                   Description                   
+-----------+---------+--------+-------------------------------------------------
+ uuid-ossp | 1.1     | s1     | generate universally unique identifiers (UUIDs)
+(1 row)
+
+-- Validate tablespace
+SELECT count(*) FROM pg_tablespace WHERE spcname = 'obj_tablespace';
+ count 
+-------
+     1
+(1 row)
+
+-- Validate role
+\dg obj_role
+      List of roles
+ Role name |  Attributes  
+-----------+--------------
+ obj_role  | Cannot login
+
+-- Validate schema
+\dn s1
+List of schemas
+ Name | Owner 
+------+-------
+ s1   | rocky
+Publications:
+    "obj_publication"
+
+-- Validate foreign data wrapper
+\dew obj_fdw
+     List of foreign-data wrappers
+  Name   | Owner | Handler | Validator 
+---------+-------+---------+-----------
+ obj_fdw | rocky | -       | -
+(1 row)
+
+-- Validate server
+\des obj_server
+          List of foreign servers
+    Name    | Owner | Foreign-data wrapper 
+------------+-------+----------------------
+ obj_server | rocky | obj_fdw
+(1 row)
+
+-- Validate user mapping
+\deu
+ List of user mappings
+   Server   | User name 
+------------+-----------
+ obj_server | rocky
+(1 row)
+
+-- Validate publication
+\dRp obj_publication
+                                   List of publications
+      Name       | Owner | All tables | Inserts | Updates | Deletes | Truncates | Via root 
+-----------------+-------+------------+---------+---------+---------+-----------+----------
+ obj_publication | rocky | f          | t       | t       | t       | t         | f
+(1 row)
+
+-- Validate subscription
+\dRs obj_subscription
+                 List of subscriptions
+       Name       | Owner | Enabled |    Publication    
+------------------+-------+---------+-------------------
+ obj_subscription | rocky | f       | {obj_publication}
+(1 row)
+
+-- Validate cast
+\dC obj_type
+                       List of casts
+ Source type | Target type |     Function      | Implicit? 
+-------------+-------------+-------------------+-----------
+ obj_type    | integer     | obj_function_cast | yes
+(1 row)
+
+-- Validate aggregate
+\da obj_aggregate
+                          List of aggregate functions
+ Schema |     Name      | Result data type | Argument data types | Description 
+--------+---------------+------------------+---------------------+-------------
+ s1     | obj_aggregate | integer          | integer             | 
+(1 row)
+
+-- Validate collation
+\dO obj_collation
+                                      List of collations
+ Schema |     Name      | Provider | Collate | Ctype | ICU Locale | ICU Rules | Deterministic? 
+--------+---------------+----------+---------+-------+------------+-----------+----------------
+ s1     | obj_collation | libc     | C       | C     |            |           | yes
+(1 row)
+
+-- Validate conversion
+\dc obj_conversion
+                    List of conversions
+ Schema |      Name      | Source | Destination | Default? 
+--------+----------------+--------+-------------+----------
+ s1     | obj_conversion | LATIN1 | UTF8        | no
+(1 row)
+
+-- Validate domain
+\dD obj_domain2
+                                   List of domains
+ Schema |    Name     |  Type   | Collation | Nullable | Default |       Check        
+--------+-------------+---------+-----------+----------+---------+--------------------
+ s1     | obj_domain2 | integer |           |          |         | CHECK (VALUE >= 0)
+(1 row)
+
+-- Validate event trigger
+\dy obj_event_trigger
+                                   List of event triggers
+       Name        |       Event       | Owner | Enabled |          Function          | Tags 
+-------------------+-------------------+-------+---------+----------------------------+------
+ obj_event_trigger | ddl_command_start | rocky | enabled | obj_function_event_trigger | 
+(1 row)
+
+-- Validate foreign table
+\det obj_foreign_table
+         List of foreign tables
+ Schema |       Table       |   Server   
+--------+-------------------+------------
+ s1     | obj_foreign_table | obj_server
+(1 row)
+
+-- Validate function
+\df obj_function
+                           List of functions
+ Schema |     Name     | Result data type | Argument data types | Type 
+--------+--------------+------------------+---------------------+------
+ s1     | obj_function | trigger          |                     | func
+(1 row)
+
+-- Validate index
+\di obj_index
+               List of relations
+ Schema |   Name    | Type  | Owner |   Table   
+--------+-----------+-------+-------+-----------
+ s1     | obj_index | index | rocky | obj_table
+(1 row)
+
+-- Validate language
+\dL plperl
+                   List of languages
+  Name  | Owner | Trusted |         Description         
+--------+-------+---------+-----------------------------
+ plperl | rocky | t       | PL/Perl procedural language
+(1 row)
+
+-- Validate materialized view
+\d+ obj_mview
+                                    Materialized view "s1.obj_mview"
+ Column |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+--------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
+ id     | integer |           |          |         | plain    |             |              | 
+ name   | text    |           |          |         | extended |             |              | 
+View definition:
+ SELECT id,
+    name
+   FROM obj_table;
+Access method: heap
+
+-- Validate operator
+\do s1.##
+                                      List of operators
+ Schema | Name | Left arg type | Right arg type | Result type |          Description          
+--------+------+---------------+----------------+-------------+-------------------------------
+ s1     | ##   | path          | path           | boolean     | implementation of ?# operator
+(1 row)
+
+-- Validate operator class
+\dAc btree integer
+                   List of operator classes
+  AM   | Input type | Storage type | Operator class | Default? 
+-------+------------+--------------+----------------+----------
+ btree | integer    |              | int4_ops       | yes
+ btree | integer    |              | obj_opclass    | no
+(2 rows)
+
+-- Validate operator family
+SELECT count(*) FROM pg_opfamily WHERE opfname = 'obj_opfamily';
+ count 
+-------
+     1
+(1 row)
+
+-- Validate procedure
+\df obj_procedure
+                           List of functions
+ Schema |     Name      | Result data type | Argument data types | Type 
+--------+---------------+------------------+---------------------+------
+ s1     | obj_procedure |                  |                     | proc
+(1 row)
+
+-- Validate text search configuration
+\dF obj_tsconfig
+ List of text search configurations
+ Schema |     Name     | Description 
+--------+--------------+-------------
+ s1     | obj_tsconfig | 
+(1 row)
+
+-- Validate text search dictionary
+\dFd obj_tsdict
+ List of text search dictionaries
+ Schema |    Name    | Description 
+--------+------------+-------------
+ s1     | obj_tsdict | 
+(1 row)
+
+-- Validate text search parser
+\dFp obj_tsparser
+     List of text search parsers
+ Schema |     Name     | Description 
+--------+--------------+-------------
+ s1     | obj_tsparser | 
+(1 row)
+
+-- Validate text search template
+\dFt obj_tstemplate
+     List of text search templates
+ Schema |      Name      | Description 
+--------+----------------+-------------
+ s1     | obj_tstemplate | 
+(1 row)
+
+-- Validate transform
+SELECT  l.lanname, ty.typname
+FROM pg_transform t
+JOIN pg_language l ON t.trflang = l.oid
+JOIN pg_type ty ON t.trftype = ty.oid
+WHERE ty.typname = 'int4' AND l.lanname = 'sql';
+ lanname | typname 
+---------+---------
+ sql     | int4
+(1 row)
+
+-- Validate type
+\dT+ obj_composite_type
+                                              List of data types
+ Schema |        Name        |   Internal name    | Size  | Elements | Owner | Access privileges | Description 
+--------+--------------------+--------------------+-------+----------+-------+-------------------+-------------
+ s1     | obj_composite_type | obj_composite_type | tuple |          | rocky |                   | 
+(1 row)
+
+\dT+ obj_enum
+                                      List of data types
+ Schema |   Name   | Internal name | Size | Elements | Owner | Access privileges | Description 
+--------+----------+---------------+------+----------+-------+-------------------+-------------
+ s1     | obj_enum | obj_enum      | 4    | red     +| rocky |                   | 
+        |          |               |      | green   +|       |                   | 
+        |          |               |      | blue     |       |                   | 
+(1 row)
+
+\dT+ obj_range
+                                       List of data types
+ Schema |   Name    | Internal name | Size | Elements | Owner | Access privileges | Description 
+--------+-----------+---------------+------+----------+-------+-------------------+-------------
+ s1     | obj_range | obj_range     | var  |          | rocky |                   | 
+(1 row)
+
+-- Validate view
+\d+ obj_view
+                             View "s1.obj_view"
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
+--------+---------+-----------+----------+---------+----------+-------------
+ id     | integer |           |          |         | plain    | 
+ name   | text    |           |          |         | extended | 
+View definition:
+ SELECT id,
+    name
+   FROM obj_table;
+
+--validate table, triggers, rules
+\d+ obj_table
+                                          Table "s1.obj_table"
+ Column |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+--------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
+ id     | integer |           | not null |         | plain    |             |              | 
+ name   | text    |           |          |         | extended |             |              | 
+Indexes:
+    "obj_table_pkey" PRIMARY KEY, btree (id)
+    "obj_index" btree (name)
+Policies (row security disabled):
+    POLICY "obj_policy" FOR SELECT
+      USING (true)
+Rules:
+    obj_rule AS
+    ON INSERT TO obj_table DO NOTHING
+Publications:
+    "obj_publication"
+Triggers:
+    obj_trigger AFTER INSERT ON obj_table FOR EACH ROW EXECUTE FUNCTION obj_function()
+Access method: heap
+
+-- Validate group
+\dg obj_group
+      List of roles
+ Role name |  Attributes  
+-----------+--------------
+ obj_group | Cannot login
+

@@ -45,6 +45,9 @@ t/auto_ddl/6155c_index_validate_drop_n1.sql
 t/auto_ddl/6166a_views_materialized_views_n1.sql
 t/auto_ddl/6166b_view_mat_views_validate_n2.sql
 t/auto_ddl/6166c_views_mat_view_validate_n1.sql
+t/auto_ddl/6666a_all_objects_create_n1.sql
+t/auto_ddl/6666b_all_objects_validate_and_drop_n2.sql
+t/auto_ddl/6666c_all_objects_validate_n1.sql
 ##
 # cleanup scripts
 ##
