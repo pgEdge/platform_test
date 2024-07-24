@@ -27,16 +27,16 @@ rm_node='n3'
 #print("*"*100)
 
 print(f"home_dir = {home_dir}\n")
-command = (f"cluster remove-node {cluster_name} {rm_node}")
-res=util_test.run_nc_cmd("This command should create a json file that defines a cluster", command, f"{home_dir}")
+command = (f"cluster list-nodes {cluster_name}")
+res=util_test.run_nc_cmd("Exercise the list-nodes command", command, f"{home_dir}")
 print(f"Command: {command}")
-print(f"The remove-node command returns = {res}\n")
+print(f"The list-nodes command returns = {res}\n")
 print("*"*100)
 
 # Needle and Haystack
 # Confirm the command worked by looking for:
 
-if "Dropping node n3" in str(res) and res.returncode == 0:
+if "CompletedProcess" in str(res) and res.returncode == 0:
 
     util_test.EXIT_PASS
 else:
