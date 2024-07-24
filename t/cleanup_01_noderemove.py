@@ -18,14 +18,14 @@ copydir = "/tmp/nccopy"
 ## First Cleanup Script- Removes Nodes
 
 for n in range(1,numnodes+1):
-    nodedir = os.path.join(clusterdir, f"n{n}")
-    
+    nodedir = os.path.join(clusterdir, f"n{n}", "pgedge")
+
     cmd_node = f"remove {pgname} --rm-data"
     res=util_test.run_nc_cmd("Remove", cmd_node, nodedir)
     util_test.printres(res)
-    if res.returncode == 1:
+    if res.returncode != 0:
         util_test.exit_message(f"Couldn't remove node {n}")
-    
+
     modules = {
         pgname: False,
         f"snowflake-{pgname}": False,
@@ -40,7 +40,7 @@ for n in range(1,numnodes+1):
         for key in modules.keys():
             if key in line and "Installed" in line:
                 modules[key] = True
-    
+
     for key in modules.keys():
         if modules[key]:
             util_test.exit_message(f"Faild, module {key} still installed")
