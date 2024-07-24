@@ -1,0 +1,432 @@
+---- Validate all objects on n2 and then drop them on n2 that should also drop objects on n1
+-- Validate database, should not exist
+\l obj_database
+                                            List of databases
+ Name | Owner | Encoding | Locale Provider | Collate | Ctype | ICU Locale | ICU Rules | Access privileges 
+------+-------+----------+-----------------+---------+-------+------------+-----------+-------------------
+(0 rows)
+
+-- Validate extension
+\dx "uuid-ossp"
+                          List of installed extensions
+   Name    | Version | Schema |                   Description                   
+-----------+---------+--------+-------------------------------------------------
+ uuid-ossp | 1.1     | s1     | generate universally unique identifiers (UUIDs)
+(1 row)
+
+SET search_path TO s1, public;
+SET
+-- Validate tablespace, should be 0
+SELECT count(*) FROM pg_tablespace WHERE spcname = 'obj_tablespace';
+ count 
+-------
+     0
+(1 row)
+
+-- Validate role
+\dg obj_role
+      List of roles
+ Role name |  Attributes  
+-----------+--------------
+ obj_role  | Cannot login
+
+-- Validate schema
+\dn s1
+List of schemas
+ Name | Owner 
+------+-------
+ s1   | rocky
+Publications:
+    "obj_publication"
+
+-- Validate foreign data wrapper
+\dew obj_fdw
+     List of foreign-data wrappers
+  Name   | Owner | Handler | Validator 
+---------+-------+---------+-----------
+ obj_fdw | rocky | -       | -
+(1 row)
+
+-- Validate server
+\des obj_server
+          List of foreign servers
+    Name    | Owner | Foreign-data wrapper 
+------------+-------+----------------------
+ obj_server | rocky | obj_fdw
+(1 row)
+
+-- Validate user mapping
+\deu
+ List of user mappings
+   Server   | User name 
+------------+-----------
+ obj_server | rocky
+(1 row)
+
+-- Validate publication
+\dRp obj_publication
+                                   List of publications
+      Name       | Owner | All tables | Inserts | Updates | Deletes | Truncates | Via root 
+-----------------+-------+------------+---------+---------+---------+-----------+----------
+ obj_publication | rocky | f          | t       | t       | t       | t         | f
+(1 row)
+
+-- Validate subscription, should not exist
+\dRs obj_subscription
+        List of subscriptions
+ Name | Owner | Enabled | Publication 
+------+-------+---------+-------------
+(0 rows)
+
+-- Validate cast
+\dC obj_type
+                       List of casts
+ Source type | Target type |     Function      | Implicit? 
+-------------+-------------+-------------------+-----------
+ obj_type    | integer     | obj_function_cast | yes
+(1 row)
+
+-- Validate aggregate
+\da obj_aggregate
+                          List of aggregate functions
+ Schema |     Name      | Result data type | Argument data types | Description 
+--------+---------------+------------------+---------------------+-------------
+ s1     | obj_aggregate | integer          | integer             | 
+(1 row)
+
+-- Validate collation
+\dO obj_collation
+                                      List of collations
+ Schema |     Name      | Provider | Collate | Ctype | ICU Locale | ICU Rules | Deterministic? 
+--------+---------------+----------+---------+-------+------------+-----------+----------------
+ s1     | obj_collation | libc     | C       | C     |            |           | yes
+(1 row)
+
+-- Validate conversion
+\dc obj_conversion
+                    List of conversions
+ Schema |      Name      | Source | Destination | Default? 
+--------+----------------+--------+-------------+----------
+ s1     | obj_conversion | LATIN1 | UTF8        | no
+(1 row)
+
+-- Validate domain
+\dD obj_domain2
+                                   List of domains
+ Schema |    Name     |  Type   | Collation | Nullable | Default |       Check        
+--------+-------------+---------+-----------+----------+---------+--------------------
+ s1     | obj_domain2 | integer |           |          |         | CHECK (VALUE >= 0)
+(1 row)
+
+-- Validate event trigger
+\dy obj_event_trigger
+                                   List of event triggers
+       Name        |       Event       | Owner | Enabled |          Function          | Tags 
+-------------------+-------------------+-------+---------+----------------------------+------
+ obj_event_trigger | ddl_command_start | rocky | enabled | obj_function_event_trigger | 
+(1 row)
+
+-- Validate foreign table
+\det obj_foreign_table
+         List of foreign tables
+ Schema |       Table       |   Server   
+--------+-------------------+------------
+ s1     | obj_foreign_table | obj_server
+(1 row)
+
+-- Validate function
+\df obj_function
+                           List of functions
+ Schema |     Name     | Result data type | Argument data types | Type 
+--------+--------------+------------------+---------------------+------
+ s1     | obj_function | trigger          |                     | func
+(1 row)
+
+-- Validate index
+\di obj_index
+               List of relations
+ Schema |   Name    | Type  | Owner |   Table   
+--------+-----------+-------+-------+-----------
+ s1     | obj_index | index | rocky | obj_table
+(1 row)
+
+-- Validate language
+\dL plperl
+                   List of languages
+  Name  | Owner | Trusted |         Description         
+--------+-------+---------+-----------------------------
+ plperl | rocky | t       | PL/Perl procedural language
+(1 row)
+
+-- Validate materialized view
+\d+ obj_mview
+                                    Materialized view "s1.obj_mview"
+ Column |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+--------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
+ id     | integer |           |          |         | plain    |             |              | 
+ name   | text    |           |          |         | extended |             |              | 
+View definition:
+ SELECT id,
+    name
+   FROM obj_table;
+Access method: heap
+
+-- Validate operator
+\do s1.##
+                                      List of operators
+ Schema | Name | Left arg type | Right arg type | Result type |          Description          
+--------+------+---------------+----------------+-------------+-------------------------------
+ s1     | ##   | path          | path           | boolean     | implementation of ?# operator
+(1 row)
+
+-- Validate operator class, should list 2
+\dAc btree integer
+                   List of operator classes
+  AM   | Input type | Storage type | Operator class | Default? 
+-------+------------+--------------+----------------+----------
+ btree | integer    |              | int4_ops       | yes
+ btree | integer    |              | obj_opclass    | no
+(2 rows)
+
+-- Validate operator family
+SELECT count(*) FROM pg_opfamily WHERE opfname = 'obj_opfamily';
+ count 
+-------
+     1
+(1 row)
+
+-- Validate procedure
+\df obj_procedure
+                           List of functions
+ Schema |     Name      | Result data type | Argument data types | Type 
+--------+---------------+------------------+---------------------+------
+ s1     | obj_procedure |                  |                     | proc
+(1 row)
+
+-- Validate text search configuration
+\dF obj_tsconfig
+ List of text search configurations
+ Schema |     Name     | Description 
+--------+--------------+-------------
+ s1     | obj_tsconfig | 
+(1 row)
+
+-- Validate text search dictionary
+\dFd obj_tsdict
+ List of text search dictionaries
+ Schema |    Name    | Description 
+--------+------------+-------------
+ s1     | obj_tsdict | 
+(1 row)
+
+-- Validate text search parser
+\dFp obj_tsparser
+     List of text search parsers
+ Schema |     Name     | Description 
+--------+--------------+-------------
+ s1     | obj_tsparser | 
+(1 row)
+
+-- Validate text search template
+\dFt obj_tstemplate
+     List of text search templates
+ Schema |      Name      | Description 
+--------+----------------+-------------
+ s1     | obj_tstemplate | 
+(1 row)
+
+-- Validate transform
+SELECT  l.lanname, ty.typname
+FROM pg_transform t
+JOIN pg_language l ON t.trflang = l.oid
+JOIN pg_type ty ON t.trftype = ty.oid
+WHERE ty.typname = 'int4' AND l.lanname = 'sql';
+ lanname | typname 
+---------+---------
+ sql     | int4
+(1 row)
+
+-- Validate type
+\dT+ obj_composite_type
+                                              List of data types
+ Schema |        Name        |   Internal name    | Size  | Elements | Owner | Access privileges | Description 
+--------+--------------------+--------------------+-------+----------+-------+-------------------+-------------
+ s1     | obj_composite_type | obj_composite_type | tuple |          | rocky |                   | 
+(1 row)
+
+\dT+ obj_enum
+                                      List of data types
+ Schema |   Name   | Internal name | Size | Elements | Owner | Access privileges | Description 
+--------+----------+---------------+------+----------+-------+-------------------+-------------
+ s1     | obj_enum | obj_enum      | 4    | red     +| rocky |                   | 
+        |          |               |      | green   +|       |                   | 
+        |          |               |      | blue     |       |                   | 
+(1 row)
+
+\dT+ obj_range
+                                       List of data types
+ Schema |   Name    | Internal name | Size | Elements | Owner | Access privileges | Description 
+--------+-----------+---------------+------+----------+-------+-------------------+-------------
+ s1     | obj_range | obj_range     | var  |          | rocky |                   | 
+(1 row)
+
+-- Validate view
+\d+ obj_view
+                             View "s1.obj_view"
+ Column |  Type   | Collation | Nullable | Default | Storage  | Description 
+--------+---------+-----------+----------+---------+----------+-------------
+ id     | integer |           |          |         | plain    | 
+ name   | text    |           |          |         | extended | 
+View definition:
+ SELECT id,
+    name
+   FROM obj_table;
+
+--validate table, triggers, rules
+\d+ obj_table
+                                          Table "s1.obj_table"
+ Column |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+--------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
+ id     | integer |           | not null |         | plain    |             |              | 
+ name   | text    |           |          |         | extended |             |              | 
+Indexes:
+    "obj_table_pkey" PRIMARY KEY, btree (id)
+    "obj_index" btree (name)
+Policies (row security disabled):
+    POLICY "obj_policy" FOR SELECT
+      USING (true)
+Rules:
+    obj_rule AS
+    ON INSERT TO obj_table DO NOTHING
+Publications:
+    "obj_publication"
+Triggers:
+    obj_trigger AFTER INSERT ON obj_table FOR EACH ROW EXECUTE FUNCTION obj_function()
+Access method: heap
+
+-- Validate group
+\dg obj_group
+      List of roles
+ Role name |  Attributes  
+-----------+--------------
+ obj_group | Cannot login
+
+-- Drop statements
+DROP EVENT TRIGGER obj_event_trigger;
+INFO:  DDL statement replicated.
+DROP EVENT TRIGGER
+--Database wasn't auto replicated to n2, nothing to drop
+DROP DATABASE obj_database;
+ERROR:  database "obj_database" does not exist
+--Tablespace wasn't auto replicated to n2, nothing to drop
+DROP TABLESPACE obj_tablespace;
+ERROR:  tablespace "obj_tablespace" does not exist
+DROP ROLE obj_role;
+INFO:  DDL statement replicated.
+DROP ROLE
+DROP EXTENSION "uuid-ossp";
+INFO:  DDL statement replicated.
+DROP EXTENSION
+DROP FOREIGN DATA WRAPPER obj_fdw CASCADE;
+NOTICE:  drop cascades to 3 other objects
+DETAIL:  drop cascades to server obj_server
+drop cascades to user mapping for rocky on server obj_server
+drop cascades to foreign table obj_foreign_table
+INFO:  DDL statement replicated.
+DROP FOREIGN DATA WRAPPER
+DROP PUBLICATION obj_publication;
+INFO:  DDL statement replicated.
+DROP PUBLICATION
+DROP AGGREGATE obj_aggregate (int);
+INFO:  DDL statement replicated.
+DROP AGGREGATE
+DROP COLLATION obj_collation;
+INFO:  DDL statement replicated.
+DROP COLLATION
+DROP CONVERSION obj_conversion;
+INFO:  DDL statement replicated.
+DROP CONVERSION
+DROP DOMAIN obj_domain2;
+INFO:  DDL statement replicated.
+DROP DOMAIN
+DROP INDEX obj_index;
+INFO:  DDL statement replicated.
+DROP INDEX
+DROP EXTENSION plperl;
+INFO:  DDL statement replicated.
+DROP EXTENSION
+DROP MATERIALIZED VIEW obj_mview;
+INFO:  DDL statement replicated.
+DROP MATERIALIZED VIEW
+DROP OPERATOR ##(path,path);
+INFO:  DDL statement replicated.
+DROP OPERATOR
+DROP OPERATOR CLASS obj_opclass USING btree;
+INFO:  DDL statement replicated.
+DROP OPERATOR CLASS
+DROP OPERATOR FAMILY obj_opfamily USING btree;
+INFO:  DDL statement replicated.
+DROP OPERATOR FAMILY
+DROP POLICY obj_policy ON obj_table;
+INFO:  DDL statement replicated.
+DROP POLICY
+DROP PROCEDURE obj_procedure;
+INFO:  DDL statement replicated.
+DROP PROCEDURE
+DROP RULE obj_rule ON obj_table;
+INFO:  DDL statement replicated.
+DROP RULE
+DROP TEXT SEARCH CONFIGURATION obj_tsconfig;
+INFO:  DDL statement replicated.
+DROP TEXT SEARCH CONFIGURATION
+DROP TEXT SEARCH DICTIONARY obj_tsdict;
+INFO:  DDL statement replicated.
+DROP TEXT SEARCH DICTIONARY
+DROP TEXT SEARCH PARSER obj_tsparser;
+INFO:  DDL statement replicated.
+DROP TEXT SEARCH PARSER
+DROP TEXT SEARCH TEMPLATE obj_tstemplate;
+INFO:  DDL statement replicated.
+DROP TEXT SEARCH TEMPLATE
+DROP TRANSFORM FOR int LANGUAGE SQL;
+INFO:  DDL statement replicated.
+DROP TRANSFORM
+DROP TRIGGER obj_trigger ON obj_table;
+INFO:  DDL statement replicated.
+DROP TRIGGER
+DROP TYPE obj_composite_type;
+INFO:  DDL statement replicated.
+DROP TYPE
+DROP TYPE obj_enum;
+INFO:  DDL statement replicated.
+DROP TYPE
+DROP TYPE obj_range;
+INFO:  DDL statement replicated.
+DROP TYPE
+DROP VIEW obj_view;
+INFO:  DDL statement replicated.
+DROP VIEW
+DROP FUNCTION obj_function CASCADE;
+INFO:  DDL statement replicated.
+DROP FUNCTION
+DROP FUNCTION obj_function_event_trigger CASCADE;
+INFO:  DDL statement replicated.
+DROP FUNCTION
+DROP FUNCTION obj_function_cast(obj_type) CASCADE;
+NOTICE:  drop cascades to cast from obj_type to integer
+INFO:  DDL statement replicated.
+DROP FUNCTION
+DROP TABLE obj_table CASCADE;
+NOTICE:  drop cascades to table obj_table membership in replication set default
+INFO:  DDL statement replicated.
+DROP TABLE
+DROP GROUP obj_group;
+INFO:  DDL statement replicated.
+DROP ROLE
+DROP SCHEMA s1 CASCADE;
+NOTICE:  drop cascades to 3 other objects
+DETAIL:  drop cascades to type obj_type
+drop cascades to type obj_domain
+drop cascades to function int4_sum(integer,integer)
+INFO:  DDL statement replicated.
+DROP SCHEMA

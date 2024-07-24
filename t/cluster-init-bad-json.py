@@ -20,34 +20,28 @@ repset=os.getenv("EDGE_REPSET","demo-repset")
 spockpath=os.getenv("EDGE_SPOCK_PATH")
 dbname=os.getenv("EDGE_DB","lcdb")
 
-file_name = (f"{cluster_name}.json")
+tmpcluster = "holdings"
+file_name = (f"{tmpcluster}.json")
 
 #
 # Use cluster json-template to create a template file:
 # 
 print(f"home_dir = {home_dir}\n")
-command = (f"cluster json-template {cluster_name} {dbname} {num_nodes} {usr} {pw} {pgv} {port}")
-res=util_test.run_nc_cmd("This command should create a json file that defines a cluster", command, f"{home_dir}")
+command = (f"cluster json-template {tmpcluster} {dbname} {num_nodes} {usr} {pw} {pgv} {port}")
+res=util_test.run_nc_cmd("This command should create a json file", command, f"{home_dir}")
 print(f"res = {res}\n")
 print("*"*100)
 
 #
-# Use cluster init to initialize the cluster defined in the template file ^
+# Use cluster init to initialize the cluster defined in the template file.
+# This will throw an error because both ports in the json file are the same.
 # 
-command = (f"cluster init {cluster_name}")
-res=util_test.run_nc_cmd("This command should initialize a cluster based on the json file", command, f"{home_dir}")
+command = (f"cluster init {tmpcluster}")
+res=util_test.run_nc_cmd("This command attempts to initialize the cluster", command, f"{home_dir}")
 print(f"res = {res.stdout}\n")
 print("*"*100)
 
-#
-# Needle and Haystack
-# Confirm the command worked by looking for the file:
-
-if "\nSyntaxError" not in str(res.stdout) or res.returncode == 0:
-
-    util_test.EXIT_FAIL
-else:
-    util_test.EXIT_PASS
-
-
+if res.returncode == 1 and "ERROR" in res.stdout:
+    print("This case returns: ERROR: Cannot install over a non-empty 'pgedge' directory. The JSON file is unmodified, so it installs twice into the same port")
+    util_test.py.EXIT_PASS
 
