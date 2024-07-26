@@ -237,11 +237,11 @@ def get_diff_data(stdout: str, type = "json") -> tuple[str, dict]:
     if type not in ["json", "csv"]:
         raise Exception(f"Type should be json or csv, not {type}")
 
-    # current pattern expects `diffs/YYYY-MM-DD_hh:mm:ss/diff.json`
+    # current pattern expects `diffs/YYYY-MM-DD/diffs_TIMESTAMP.json`
     if type == "json":
-        file_pattern = r'diffs/\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}/diff.json'
+        file_pattern = r'diffs/\d{4}-\d{2}-\d{2}/diffs_\d+.json'
     if type == "csv":
-        file_pattern = r'diffs/\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}/n1__n2/'
+        file_pattern = r'diffs/\d{4}-\d{2}-\d{2}/n1__n2/'
     match = re.search(file_pattern, stdout)
 
     if match:
@@ -280,7 +280,7 @@ def get_diff_data(stdout: str, type = "json") -> tuple[str, dict]:
 ## Compares data in dicts, allows lists to be out of order
 # *****************************************************************************
 
-def compare_structures(struct1, struct2) -> bool:
+def compare_structures(struct1, struct2, verbose = False) -> bool:
     if isinstance(struct1, dict) and isinstance(struct2, dict):
         if set(struct1.keys()) != set(struct2.keys()):
             return False
@@ -295,8 +295,12 @@ def compare_structures(struct1, struct2) -> bool:
         return all(compare_structures(item1, item2) for item1, item2 in zip(sorted_struct1, sorted_struct2))
 
     else:
-        return struct1 == struct2
-    
+        struct1, struct2 = str(struct1), str(struct2)
+        if struct1 == struct2: return True
+        else:
+            if verbose: print(f"Difference found in structure: {struct1} != {struct2}")
+            return False
+
 # *****************************************************************************
 ## Prints the result from a command run in a nicer format since its driving me crazy
 # *****************************************************************************
