@@ -1,13 +1,15 @@
 import sys, os, psycopg, json, subprocess, shutil, re
 from dotenv import load_dotenv
 
-EXIT_PASS = 0
-EXIT_FAIL = 1
+def EXIT_PASS():
+    sys.exit(0)
+
+def EXIT_FAIL():
+    sys.exit(1)
 
 ## Utility Functions
 def set_env():
     load_dotenv('t/lib/config.env')
-
 
 ## abruptly terminate with a codified message
 def exit_message(p_msg, p_rc=1):
@@ -16,6 +18,7 @@ def exit_message(p_msg, p_rc=1):
     else:
        print(f"ERROR {p_msg}")
     sys.exit(p_rc)
+ 
 
 # ************************************************************************************************************** 
 ## Run a pgEdge command

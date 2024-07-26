@@ -37,10 +37,11 @@ print("*"*100)
 # Confirm the command worked by looking for:
 
 if "CompletedProcess" in str(res) and res.returncode == 0:
-
-    util_test.EXIT_PASS
+    
+    util_test.EXIT_PASS()
 else:
-    util_test.EXIT_PASS
+    util_test.EXIT_FAIL()
+
 
 
 

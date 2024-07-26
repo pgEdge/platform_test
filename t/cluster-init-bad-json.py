@@ -37,11 +37,19 @@ print("*"*100)
 # This will throw an error because both ports in the json file are the same.
 # 
 command = (f"cluster init {tmpcluster}")
-res=util_test.run_nc_cmd("This command attempts to initialize the cluster", command, f"{home_dir}")
-print(f"res = {res.stdout}\n")
+res1=util_test.run_nc_cmd("This command attempts to initialize the cluster", command, f"{home_dir}")
+print(f"The attempt to initialize returns = {res1.returncode}\n")
+print(f"The attempt to initialize the cluster should fail = {res1.stdout}\n")
 print("*"*100)
 
-if res.returncode == 1 and "ERROR" in res.stdout:
-    print("This case returns: ERROR: Cannot install over a non-empty 'pgedge' directory. The JSON file is unmodified, so it installs twice into the same port")
-    util_test.py.EXIT_PASS
+# Per Cady, the way the functionality is coded, it returns a 0 until we account for the errors.
+# This seems a bit backwards, but we'll check for 0 and FAILED:
+
+if res1.returncode == 0 and "FAILED" in str(res1.stdout):
+    print("This case should return: ERROR: Cannot install over a non-empty 'pgedge' directory.") 
+    print("The JSON file is unmodified, so it installs twice into the same port")
+
+    util_test.EXIT_PASS()
+else:
+    util_test.EXIT_FAIL()
 

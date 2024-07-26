@@ -72,9 +72,9 @@ print("*"*100)
 
 if "\nSyntaxError" not in str(init.stdout) or init.returncode == 1:
 
-    util_test.EXIT_FAIL
+    util_test.EXIT_PASS()
 else:
-    util_test.EXIT_PASS
+    util_test.EXIT_FAIL()
 
 
 

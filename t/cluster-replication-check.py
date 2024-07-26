@@ -20,27 +20,30 @@ repset=os.getenv("EDGE_REPSET","demo-repset")
 spockpath=os.getenv("EDGE_SPOCK_PATH")
 dbname=os.getenv("EDGE_DB","lcdb")
 
-cwd=os.getcwd()
-num_nodes=3
-rm_node='n3'
-
 #print("*"*100)
 
 print(f"home_dir = {home_dir}\n")
 command = (f"cluster replication-check {cluster_name}")
 res=util_test.run_nc_cmd("Exercise the replication-check command", command, f"{home_dir}")
-print(f"Command: {command}")
-print(f"The list-nodes command returns = {res}\n")
+print(f"This should be a good command: {command}")
+print(f"The replication-check command returns = {res}\n")
+print("*"*100)
+
+print(f"home_dir = {home_dir}\n")
+command = (f"cluster replication-check {repuser}")
+res2=util_test.run_nc_cmd("Exercise the replication-check command with a bad cluster name", command, f"{home_dir}")
+print(f"This should be a bad command: {command}")
+print(f"The replication-check command returns an error = {res2}\n")
 print("*"*100)
 
 # Needle and Haystack
 # Confirm the command worked by looking for:
 
-if "sub_show_status" in str(res) and res.returncode == 0:
-
-    util_test.EXIT_PASS
+if "sub_show_status" in str(res) and "not found" in str(res2) and res2.returncode == 1 and res.returncode == 0:
+    
+    util_test.EXIT_PASS()
 else:
-    util_test.EXIT_PASS
+    util_test.EXIT_FAIL()
 
 
 
