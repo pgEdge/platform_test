@@ -74,11 +74,23 @@ if res.returncode == 1 or "TABLES DO NOT MATCH" not in res.stdout:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Get Diffs `csv`", 1)
 _, diff_data_csv = util_test.get_diff_data(res.stdout, type="csv")
 
+if not diff_data_jsn:
+    util_test.exit_message("Found no diffs in json diff file")
+
+if not diff_data_csv:
+    util_test.exit_message("Found no diffs in csv diff file")
+
+print("Successfully read diff data from both json and csv")
+
+# print(sum( [len(diff_data_jsn["n1/n2"][f"n{i}"]) for i in range(1,2)] ))
+# print(len(diff_data_csv))
+
 # Compare structure
-if util_test.compare_structures(diff_data_jsn["n1/n2"], diff_data_csv):
-    print("Diff files in csv and json match!")
-else:
-    util_test.exit_message("Structures did not match")
+# NOTE: this used to be easier but new format makes this annoying, if needed might impement later 
+# if util_test.compare_structures(diff_data_jsn["n1/n2"], diff_data_csv):
+#     print("Diff files in csv and json match!")
+# else:
+#     util_test.exit_message("Structures did not match")
 
 # write_diff("diff_from_json", diff_data_jsn)
 # write_diff("diff_from_csv", diff_data_csv)

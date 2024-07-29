@@ -244,7 +244,7 @@ def get_diff_data(stdout: str, type = "json") -> tuple[str, dict]:
     if type == "json":
         file_pattern = r'diffs/\d{4}-\d{2}-\d{2}/diffs_\d+.json'
     if type == "csv":
-        file_pattern = r'diffs/\d{4}-\d{2}-\d{2}/n1__n2/'
+        file_pattern = r'diffs/\d{4}-\d{2}-\d{2}/n1_n2_\d+.diff'
     match = re.search(file_pattern, stdout)
 
     if match:
@@ -258,23 +258,11 @@ def get_diff_data(stdout: str, type = "json") -> tuple[str, dict]:
             diff_data = json.load(diff_file)
 
     if type == "csv":
-        diff_data = dict()
-        fn1 = os.path.join(diff_file_path, "n1.csv")
-        fn2 = os.path.join(diff_file_path, "n2.csv")
-        fn3 = os.path.join(diff_file_path, "n3.csv")
-
-        with open(fn1, "r") as diff_file:
-            data = csv.DictReader(diff_file)
-            diff_data["n1"] = [row for row in data]
-
-        with open(fn2, "r") as diff_file:
-            data = csv.DictReader(diff_file)
-            diff_data["n2"] = [row for row in data]
-
-        if os.path.exists(fn3):
-            with open(fn3, "r") as diff_file:
-                data = csv.DictReader(diff_file)
-                diff_data["n3"] = [row for row in data]
+        diff_data = list()
+        for line in open(diff_file_path, "r"):
+            if line[0] == '+' or line[0] == '-':
+                items = line[1:].strip().split(',')
+                if items: diff_data.append(items)
 
     return diff_file_local, diff_data
 
