@@ -1,6 +1,7 @@
 t/setup_01_install.py
 t/setup_02_nodecreate.py
 t/setup_03_noderun.py
+t/cluster_1_gen_json.py
 
 t/ace_01_setup.py
 t/ace_02_clusterjson.py
