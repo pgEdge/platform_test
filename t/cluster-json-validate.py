@@ -49,7 +49,7 @@ print(returns.stdout)
 print(f"res = {res.returncode}\n")
 print("*"*100)
 
-if res.returncode == 0 and "JSON defines a" in returns.stdout:
+if res.returncode == 0 and "file structure is valid" in returns.stdout:
 
     util_test.EXIT_PASS()
 else:

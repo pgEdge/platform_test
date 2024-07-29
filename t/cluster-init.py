@@ -31,29 +31,26 @@ command = (f"cluster json-template {cluster_name} {dbname} {num_nodes} {usr} {pw
 res=util_test.run_nc_cmd("This command should create a json file that defines a cluster", command, f"{home_dir}")
 print(f"res = {res}\n")
 
-new_address_0 = '127.0.0.1'
-new_address_1 = '127.0.0.1'
-new_address_2 = '127.0.0.1'
-new_port_0 = port
-new_port_1 = port + 1
-new_port_2 = port + 2
 new_path_0 = (f"{cwd}/{cluster_dir}/n1")
 new_path_1 = (f"{cwd}/{cluster_dir}/n2")
 new_path_2 = (f"{cwd}/{cluster_dir}/n3")
 
+
 with open(f"{cluster_dir}/{cluster_name}.json", 'r') as file:
     data = json.load(file)
     #print(data)
-    data["remote"]["os_user"] = repuser
-    data["node_groups"]["remote"][0]["nodes"][0]["ip_address"] = new_address_0
-    data["node_groups"]["remote"][1]["nodes"][0]["ip_address"] = new_address_1
-    data["node_groups"]["remote"][2]["nodes"][0]["ip_address"] = new_address_2
-    data["node_groups"]["remote"][0]["nodes"][0]["port"] = new_port_0
-    data["node_groups"]["remote"][1]["nodes"][0]["port"] = new_port_1
-    data["node_groups"]["remote"][2]["nodes"][0]["port"] = new_port_2
-    data["node_groups"]["remote"][0]["nodes"][0]["path"] = new_path_0
-    data["node_groups"]["remote"][1]["nodes"][0]["path"] = new_path_1
-    data["node_groups"]["remote"][2]["nodes"][0]["path"] = new_path_2
+    data["node_groups"][0]["path"] = new_path_0
+    data["node_groups"][1]["path"] = new_path_1
+    data["node_groups"][2]["path"] = new_path_2
+
+
+
+#with open(f"{cluster_dir}/{cluster_name}.json", 'r') as file:
+#    data = json.load(file)
+#    #print(data)
+#    data["node_groups"][0]["nodes"][0]["path"] = new_path_0
+#    data["node_groups"][1]["nodes"][0]["path"] = new_path_1
+#    data["node_groups"][2]["nodes"][0]["path"] = new_path_2
 
 newdata = json.dumps(data, indent=4)
 with open(f"{cluster_dir}/{cluster_name}.json", 'w') as file:
