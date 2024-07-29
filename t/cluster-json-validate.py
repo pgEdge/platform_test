@@ -51,5 +51,7 @@ print("*"*100)
 
 if res.returncode == 0 and "JSON defines a" in returns.stdout:
 
-    util_test.EXIT_PASS
+    util_test.EXIT_PASS()
+else:
+    util_test.EXIT_FAIL()
 

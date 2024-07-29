@@ -31,6 +31,10 @@ t/cluster-json-invalid-file.py
 t/cluster-json-validate.py
 t/cluster-init.py
 #t/get_info.py
+t/cluster-remove-node.py
+t/cluster-list-nodes.py
+t/cluster-init-bad-json.py
+t/cluster-replication-check.py
 
 ## Test the DB module
 ## We have a two node cluster in: /home/ec2-user/work/platform_test/nc/pgedge/cluster/demo/n1 and n2

@@ -51,6 +51,14 @@ res1=util_test.run_nc_cmd("Querying db guc-show for information about shared_pre
 print(res1)
 print("*"*100)
 
+#
+# Check the information from cluster list-nodes.
+#
+command = (f"cluster list-nodes {cluster_name}")
+res=util_test.run_nc_cmd("Exercise the list-nodes command", command, f"{home_dir}")
+print(f"Command: {command}")
+print(f"The list-nodes command returns = {res}\n")
+print("*"*100)
 
 #
 # Check the information returned by pgedge info at the nc dir.

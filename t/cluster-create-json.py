@@ -40,9 +40,9 @@ print(f"The file info contains = {file_info}")
 
 if "os.stat_result" not in str(file_info) or res.returncode == 1:
 
-    util_test.EXIT_FAIL
+    util_test.EXIT_FAIL()
 else:
-    util_test.EXIT_PASS
+    util_test.EXIT_PASS()
 
 
 

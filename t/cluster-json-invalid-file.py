@@ -24,8 +24,10 @@ dbname=os.getenv("EDGE_DB","lcdb")
 ## We're going to use names that aren't used by other tests to avoid confusion.
 #  This test will also be self-contained...
 
+here = os.getcwd()
 tmpcluster = "resources"
 file_name = (f"{tmpcluster}.json")
+print(here)
 print(file_name)
 #
 
@@ -36,15 +38,19 @@ res=util_test.run_nc_cmd("This command should create a json file that defines a 
 print(f"res = {res}\n")
 print("*"*100)
 
-if not file_name:
+if res.returncode == 1:
     util_test.EXIT_FAIL
 
 # Corrupt the file with os.truncate:
 
-path=(f"{home_dir}/cluster/{tmpcluster}/{file_name}")
+path=(f"{here}/{home_dir}/cluster/{tmpcluster}/{file_name}")
 file_info = os.truncate(path, 150)
-print(f"path = {path}")
-print(f"The call to os.truncate returns = {file_info}")
+print(f"Our test json is located at = {path}")
+print(f"After the call to os.truncate the json file contains:")
+json = print(open(path).read())
+
+if res.returncode == 1:
+    util_test.EXIT_FAIL
 
 # Confirm that if the json template is invalid, cluster json-validate will catch the error:
 # 
@@ -55,6 +61,8 @@ print(results)
 print("*"*100)
 
 
-if "Expecting property name" in str(res) or res.returncode == 1:
-    util_test.EXIT_PASS
+if "Expecting property name" in str(results) or results.returncode == 1:
 
+    util_test.EXIT_PASS()
+else:
+    util_test.EXIT_FAIL()
