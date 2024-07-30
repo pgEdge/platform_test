@@ -2,7 +2,6 @@
 
 # the test case tells us how data can be filtered by column filteration
 
-
 use strict;
 use warnings;
 use File::Which;
@@ -20,58 +19,51 @@ no warnings 'uninitialized';
 #pgedge home directory for n1
 my $homedir1="$ENV{EDGE_CLUSTER_DIR}/n1/pgedge";
 print("whoami = $ENV{EDGE_REPUSER}\n");
-
 print("The home directory is $homedir1\n"); 
-
 print("The port number is $ENV{EDGE_START_PORT}\n");
 
 #pgedge home directory for n2
 my $homedir2="$ENV{EDGE_CLUSTER_DIR}/n2/pgedge";
-
 #increment 1 to the default port for use with node n2
 my $myport2 = $ENV{'EDGE_START_PORT'} + 1;
-
 print("The home directory is $homedir2\n"); 
-
 print("The port number is $myport2\n");
+print ("-"x50,"\n"); 
 
- print ("-"x50,"\n"); 
+##Source the environment variables on node 1:
 
-##Table validation on n1
+my $cmd = qq(source $homedir1/$ENV{EDGE_COMPONENT}/pg16.env);
+print("cmd = $cmd\n");
+my($success, $error_message, $full_buf, $stdout_buf, $stderr_buf)= IPC::Cmd::run(command => $cmd, verbose => 0);
+##
+   print("full_buf = @$full_buf\n");
+   print("stdout_buf = @$stdout_buf\n");
+   print("stderr_buf = @$stderr_buf\n");
 
-my $dbh = DBI->connect("dbi:Pg:dbname=$ENV{EDGE_DB};host=$ENV{EDGE_HOST};port= $ENV{EDGE_START_PORT}",$ENV{EDGE_USERNAME},$ENV{EDGE_PASSWORD});
-
-my $table_exists = $dbh->table_info(undef, 'public', 'employee', 'TABLE')->fetch;
-
-if ($table_exists) {
-    print "Table 'employee' already exists in the database.\n";
-    
-    print("\n");
-} 
-
-else
-{
+# I removed the check for the tables existence (since we can include the IF NOT EXISTS clause in the command):
 # Creating public.$ENV{EDGE_TABLE} Table
-
   
-    my $cmd1 = qq($homedir1/$ENV{EDGE_COMPONENT}/bin/psql -t -h $ENV{EDGE_HOST} -p $ENV{EDGE_START_PORT} -d $ENV{EDGE_DB} -c "CREATE TABLE IF NOT EXISTS public.employee (
-    emp_id smallint Primary Key,
-    emp_govt_id varchar(15),
-    emp_first_name varchar(40),
-    emp_last_name varchar(40),
-    emp_address varchar(50),
-    emp_city_state varchar(15),
-    emp_country varchar(2),
-    emp_birth_date date,
-    emp_division varchar(7),
-    emp_date_added date);");
+my $cmd1 = qq($homedir1/$ENV{EDGE_COMPONENT}/bin/psql -t -h $ENV{EDGE_HOST} -p $ENV{EDGE_START_PORT} -d $ENV{EDGE_DB} -c "CREATE TABLE IF NOT EXISTS public.employee (
+emp_id smallint Primary Key,
+emp_govt_id varchar(15),
+emp_first_name varchar(40),
+emp_last_name varchar(40),
+emp_address varchar(50),
+emp_city_state varchar(15),
+emp_country varchar(2),
+emp_birth_date date,
+emp_division varchar(7),
+emp_date_added date);");
     
-    #print("cmd1 = $cmd1\n");
-    
-    my($success1, $error_message1, $full_buf1, $stdout_buf1, $stderr_buf1)= IPC::Cmd::run(command => $cmd1, verbose => 0);
-    print("stdout_buf1 = @$stdout_buf1\n");
-    
-   if(!(contains(@$stdout_buf1[0], "CREATE TABLE")))
+print("cmd1 = $cmd1\n");
+my($success1, $error_message1, $full_buf1, $stdout_buf1, $stderr_buf1)= IPC::Cmd::run(command => $cmd1, verbose => 0);
+##
+## This is where we fail! 
+print("full_buf1 = @$full_buf1\n");
+print("stdout_buf1 = @$stdout_buf1\n");
+print("stderr_buf1 = @$stderr_buf1\n");
+
+if(!(contains(@$stdout_buf1[0], "CREATE TABLE")))
 {
     exit(1);
 }
@@ -79,7 +71,7 @@ else
    print ("-"x50,"\n"); 
    
   
-    
+print("We got to the second check");
     
 #Adding Table to the Repset 
 
@@ -104,44 +96,33 @@ else {
    
 }
 
-   print ("-"x50,"\n"); 
+print ("-"x50,"\n"); 
    
-#Table Validation on n2
-
-my $dbh1 = DBI->connect("dbi:Pg:dbname=$ENV{EDGE_DB};host=$ENV{EDGE_HOST};port=  $myport2",$ENV{EDGE_USERNAME},$ENV{EDGE_PASSWORD});
-
-my $table_exists1 = $dbh1->table_info(undef, 'public', 'employee', 'TABLE')->fetch;
-
-if ($table_exists1) {
-    print "Table 'employee' already exists in the database.\n";
+my $cmd3 = qq($homedir2/$ENV{EDGE_COMPONENT}/bin/psql -t -h $ENV{EDGE_HOST} -p$myport2 -d $ENV{EDGE_DB} -c "CREATE TABLE IF NOT EXISTS public.employee (
+emp_id smallint Primary Key,
+emp_govt_id varchar(15),
+emp_first_name varchar(40),
+emp_last_name varchar(40),
+emp_address varchar(50),
+emp_city_state varchar(15),
+emp_country varchar(2),
+emp_birth_date date,
+emp_division varchar(7),
+emp_date_added date);");
     
-    print("\n");
-} 
-else
-{
-    my $cmd3 = qq($homedir2/$ENV{EDGE_COMPONENT}/bin/psql -t -h $ENV{EDGE_HOST} -p$myport2 -d $ENV{EDGE_DB} -c "CREATE TABLE IF NOT EXISTS public.employee (
-    emp_id smallint Primary Key,
-    emp_govt_id varchar(15),
-    emp_first_name varchar(40),
-    emp_last_name varchar(40),
-    emp_address varchar(50),
-    emp_city_state varchar(15),
-    emp_country varchar(2),
-    emp_birth_date date,
-    emp_division varchar(7),
-    emp_date_added date);");
+print("cmd3 = $cmd3\n");
     
-    #print("cmd2 = $cmd1\n");
-    
-    my($success3, $error_message3, $full_buf3, $stdout_buf3, $stderr_buf3)= IPC::Cmd::run(command => $cmd3, verbose => 0);
-    print("stdout_buf3 = @$stdout_buf3\n");
+my($success3, $error_message3, $full_buf3, $stdout_buf3, $stderr_buf3)= IPC::Cmd::run(command => $cmd3, verbose => 0);
+
+print("full_buf3 = @$full_buf3\n");
+print("stdout_buf3 = @$stdout_buf3\n");
+print("stderr_buf3 = @$stderr_buf3\n");
     
      if(!(contains(@$stdout_buf3[0], "CREATE TABLE")))
 {
     exit(1);
 }
-
-} 
+ 
    print ("-"x50,"\n");    
     
  #Adding table to repset on n2
@@ -241,4 +222,4 @@ print("-"x50,"\n");
     exit(1);
 }
 
-}
+
