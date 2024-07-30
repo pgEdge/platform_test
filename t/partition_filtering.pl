@@ -18,78 +18,65 @@ no warnings 'uninitialized';
 #pgedge home directory for n1
 my $homedir1="$ENV{EDGE_CLUSTER_DIR}/n1/pgedge";
 print("whoami = $ENV{EDGE_REPUSER}\n");
-
 print("The home directory is $homedir1\n"); 
-
 print("The port number is $ENV{EDGE_START_PORT}\n");
 
 #pgedge home directory for n2
 my $homedir2="$ENV{EDGE_CLUSTER_DIR}/n2/pgedge";
-
 #increment 1 to the default port for use with node n2
-
 my $myport2 = $ENV{'EDGE_START_PORT'} + 1;
-
 print("The home directory is $homedir2\n"); 
-
 print("The port number is $myport2\n");
 
+my $cmd = qq(source $homedir1/$ENV{EDGE_COMPONENT}/pg16.env);
+print("cmd = $cmd\n");
+my($success, $error_message, $full_buf, $stdout_buf, $stderr_buf)= IPC::Cmd::run(command => $cmd, verbose => 0);
+##
+   print("full_buf = @$full_buf\n");
+   print("stdout_buf = @$stdout_buf\n");
+   print("stderr_buf = @$stderr_buf\n");
 
-
-##Table validation in n1
-
-my $dbh = DBI->connect("dbi:Pg:dbname=$ENV{EDGE_DB};host=$ENV{EDGE_HOST};port= $ENV{EDGE_START_PORT}",$ENV{EDGE_USERNAME},$ENV{EDGE_PASSWORD});
-my $table_exists = $dbh->table_info(undef, 'public', 'customer', 'TABLE')->fetch;
-
-if ($table_exists) {
-    print "Table 'customer' already exists in the database.\n";
-    
-    print("\n");
-} 
-
-else
-{
-
+# I removed the check for the tables existence (since we can include the IF NOT EXISTS clause in the command):
 # Creating public.$ENV{EDGE_TABLE} Table
 
-  
-    my $cmd1 = qq($homedir1/$ENV{EDGE_COMPONENT}/bin/psql -t -h $ENV{EDGE_HOST} -p $ENV{EDGE_START_PORT} -d $ENV{EDGE_DB} -c "CREATE TABLE IF NOT EXISTS public.customer (
-    cust_id integer,
-    cust_name varchar(40),
-    cust_contact varchar(40),
-    cust_address varchar(60),
-    city varchar(15),
-    country_code char(2),
-    sales_contact smallint,
-    sales_date_added date) PARTITION BY LIST (country_code);");
+my $cmd1 = qq($homedir1/$ENV{EDGE_COMPONENT}/bin/psql -t -h $ENV{EDGE_HOST} -p $ENV{EDGE_START_PORT} -d $ENV{EDGE_DB} -c "CREATE TABLE IF NOT EXISTS public.customer (
+cust_id integer,
+cust_name varchar(40),
+cust_contact varchar(40),
+cust_address varchar(60),
+city varchar(15),
+country_code char(2),
+sales_contact smallint,
+sales_date_added date) PARTITION BY LIST (country_code);");
     
-    #print("cmd1 = $cmd1\n");
+print("cmd1 = $cmd1\n");
     
-    my($success1, $error_message1, $full_buf1, $stdout_buf1, $stderr_buf1)= IPC::Cmd::run(command => $cmd1, verbose => 0);
-    print("stdout_buf1 = @$stdout_buf1\n");
+my($success1, $error_message1, $full_buf1, $stdout_buf1, $stderr_buf1)= IPC::Cmd::run(command => $cmd1, verbose => 0);
+print("full_buf1 = @$full_buf1\n");
+print("stdout_buf1 = @$stdout_buf1\n");
+print("stderr_buf1 = @$stderr_buf1\n");
     
    if(!(contains(@$stdout_buf1[0], "CREATE TABLE")))
 {
     exit(1);
 }
+
+print ("-"x50,"\n"); 
    
-   print ("-"x50,"\n"); 
+# Adding constraints to  Table in n1
    
-   # Adding constraints to  Table in n1
-   
-    my $cmd2 = qq($homedir1/$ENV{EDGE_COMPONENT}/bin/psql -t -h $ENV{EDGE_HOST} -p $ENV{EDGE_START_PORT} -d $ENV{EDGE_DB} -c "ALTER TABLE public.customer ADD CONSTRAINT primary_constraint PRIMARY KEY (cust_id, country_code)");
+my $cmd2 = qq($homedir1/$ENV{EDGE_COMPONENT}/bin/psql -t -h $ENV{EDGE_HOST} -p $ENV{EDGE_START_PORT} -d $ENV{EDGE_DB} -c "ALTER TABLE public.customer ADD CONSTRAINT primary_constraint PRIMARY KEY (cust_id, country_code)");
     
-    #print("cmd2 = $cmd2\n");
-    
-    my($success2, $error_message2, $full_buf2, $stdout_buf2, $stderr_buf2)= IPC::Cmd::run(command => $cmd2, verbose => 0);
-    print("stdout_buf2 = @$stdout_buf2\n");
+print("cmd2 = $cmd2\n");
+my($success2, $error_message2, $full_buf2, $stdout_buf2, $stderr_buf2)= IPC::Cmd::run(command => $cmd2, verbose => 0);
+print("stdout_buf2 = @$stdout_buf2\n");
     
    if(!(contains(@$stdout_buf2[0], "ALTER TABLE")))
 {
     exit(1);
 }
    
-  print ("-"x50,"\n"); 
+print ("-"x50,"\n"); 
    
    #creating partition tables in n1
    
@@ -120,51 +107,35 @@ CREATE TABLE non_eu_members PARTITION OF public.customer DEFAULT;;");
    
    print ("-"x50,"\n"); 
    
-   # Table Validation in n2
-   
-my $dbh1 = DBI->connect("dbi:Pg:dbname=$ENV{EDGE_DB};host=$ENV{EDGE_HOST};port=  $myport2",$ENV{EDGE_USERNAME},$ENV{EDGE_PASSWORD});
-
-my $table_exists1 = $dbh1->table_info(undef, 'public', 'customer', 'TABLE')->fetch;
-
-if ($table_exists1) {
-    print "Table 'customer' already exists in the database.\n";
-    
-    print("\n");
-} 
-
-else
-{
-
 # Creating public.$ENV{EDGE_TABLE} Table
 
-  
-    my $cmd5 = qq($homedir1/$ENV{EDGE_COMPONENT}/bin/psql -t -h $ENV{EDGE_HOST} -p $myport2 -d $ENV{EDGE_DB} -c "CREATE TABLE IF NOT EXISTS public.customer (
-    cust_id integer,
-    cust_name varchar(40),
-    cust_contact varchar(40),
-    cust_address varchar(60),
-    city varchar(15),
-    country_code char(2),
-    sales_contact smallint,
-    sales_date_added date) PARTITION BY LIST (country_code);");
+my $cmd5 = qq($homedir1/$ENV{EDGE_COMPONENT}/bin/psql -t -h $ENV{EDGE_HOST} -p $myport2 -d $ENV{EDGE_DB} -c "CREATE TABLE IF NOT EXISTS public.customer (
+cust_id integer,
+cust_name varchar(40),
+cust_contact varchar(40),
+cust_address varchar(60),
+city varchar(15),
+country_code char(2),
+sales_contact smallint,
+sales_date_added date) PARTITION BY LIST (country_code);");
     
-    #print("cmd1 = $cmd1\n");
+print("cmd5 = $cmd5\n");
     
-    my($success5, $error_message5, $full_buf5, $stdout_buf5, $stderr_buf5)= IPC::Cmd::run(command => $cmd5, verbose => 0);
-    print("stdout_buf5 = @$stdout_buf5\n");
+my($success5, $error_message5, $full_buf5, $stdout_buf5, $stderr_buf5)= IPC::Cmd::run(command => $cmd5, verbose => 0);
+print("stdout_buf5 = @$stdout_buf5\n");
     
    if(!(contains(@$stdout_buf5[0], "CREATE TABLE")))
 {
     exit(1);
 }
- }  
-   print ("-"x50,"\n"); 
+
+print ("-"x50,"\n"); 
     
  # Adding constraints to  Table in n2
  
     my $cmd6 = qq($homedir2/$ENV{EDGE_COMPONENT}/bin/psql -t -h $ENV{EDGE_HOST} -p $myport2 -d $ENV{EDGE_DB} -c "ALTER TABLE public.customer ADD CONSTRAINT primary_constraint PRIMARY KEY (cust_id, country_code)");
     
-    #print("cmd6 = $cmd6\n");
+    print("cmd6 = $cmd6\n");
     
     my($success6, $error_message6, $full_buf6, $stdout_buf6, $stderr_buf6)= IPC::Cmd::run(command => $cmd6, verbose => 0);
     print("stdout_buf6 = @$stdout_buf6\n");
@@ -179,7 +150,7 @@ else
  #creating partition tables in n2
   my $cmd7 = qq($homedir1/$ENV{EDGE_COMPONENT}/bin/psql -t -h $ENV{EDGE_HOST} -p $myport2 -d $ENV{EDGE_DB} -c "CREATE TABLE IF NOT EXISTS eu_members PARTITION OF public.customer FOR VALUES IN ('BE', 'BG', 'CZ', 'DK', 'DE', 'EE', 'IE', 'EL', 'ES', 'FR', 'HR', 'IT', 'CY', 'LV', 'LT', 'LU', 'HU', 'MT', 'NL', 'AT', 'PL', 'PT', 'RO', 'SI', 'SK', 'FI', 'SE');");
     
-    #print("cmd7 = $cmd7\n");
+    print("cmd7 = $cmd7\n");
     
     my($success7, $error_message7, $full_buf7, $stdout_buf7, $stderr_buf7)= IPC::Cmd::run(command => $cmd7, verbose => 0);
     print("stdout_buf7 = @$stdout_buf7\n");
@@ -192,7 +163,7 @@ else
   my $cmd8 = qq($homedir1/$ENV{EDGE_COMPONENT}/bin/psql -t -h $ENV{EDGE_HOST} -p $myport2 -d $ENV{EDGE_DB} -c " 
 CREATE TABLE non_eu_members PARTITION OF public.customer DEFAULT;;");
     
-    #print("cmd8 = $cmd8\n");
+    print("cmd8 = $cmd8\n");
     
     my($success8, $error_message8, $full_buf8, $stdout_buf8, $stderr_buf8)= IPC::Cmd::run(command => $cmd8, verbose => 0);
     print("stdout_buf8 = @$stdout_buf8\n");
@@ -336,6 +307,6 @@ print("-"x50,"\n");
     exit(1);
 }
       
-}
+
 
 
