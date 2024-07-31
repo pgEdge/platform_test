@@ -20,6 +20,57 @@ def exit_message(p_msg, p_rc=1):
     sys.exit(p_rc)
  
 
+# **************************************************************************************************************
+## source_pg_env
+# **************************************************************************************************************
+# You can call this in each script that needs to connect to the database with psql.
+# This function sources the pg{pgv}.env file; to use it, pass in the node path, pg version, and node_number
+# For example:
+# res=util_test.source_pg_env(cluster_dir, pgv, node_num);
+
+def source_pg_env(node_path, version, node_num):
+    print(f"{node_path}/{node_num}/pgedge/pg{version}/pg{version}.env")
+    config_file_name = format(f"{node_path}/{node_num}/pgedge/pg{version}/pg{version}.env")
+
+# Pass information from the script to the sourcing logic from the .runner.py program (modified a bit) 
+
+    return source_config_file(config_file_name)   
+
+# source_config_file(config_file)
+
+def source_config_file(config_file):
+    # Check if the config file exists
+    if not os.path.isfile(config_file):
+        print(f"Error: The configuration file '{config_file}' does not exist.")
+        exit(1)  # Exit the program with an error code
+
+    # Read, format and set environment variables from the config file that are in a bash supported format
+    # So stripping various things from it to get us the key, value pairs to load in os.environ[key] = value
+    try:
+        with open(config_file, 'r') as file:
+            for line in file:
+               # Ignore empty lines and comments and remove \n's
+               if line.strip() and not line.startswith('#'):                    
+                    # Remove leading and trailing whitespace 
+                    line = line.replace("\\n", "")
+                    line = line.strip()
+                    print(locals())
+                    # Remove 'export ' from the line
+                    line = line.replace('export ', '')
+                    # Split the line into key and value at the first '='
+                    key, value = line.split('=', 1)
+                    # Remove double quotes if present, e.g. remove quotes around demo in export EDGE_CLUSTER="demo"
+                    value = value.strip('"')
+                    # Resolve any embedded environment variables e.g. resolve $NC_DIR embedded in EDGE_HOME_DIR="$NC_DIR/pgedge"
+                    value = os.path.expandvars(value)
+                    # Set the environment variable
+                    os.environ[key] = value
+        print(f"Configuration file '{config_file}' sourced successfully.")
+    except Exception as e:
+        print(f"Error: Failed to source the configuration file '{config_file}'.")
+        print(f"Exception: {e}")
+        exit(1)  # Exit the program with an error code
+
 # ************************************************************************************************************** 
 ## Run a pgEdge command
 # **************************************************************************************************************
