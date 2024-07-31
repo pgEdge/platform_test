@@ -1,0 +1,211 @@
+-- Prepared statement for spock.tables to list tables and associated indexes
+PREPARE spocktab AS SELECT nspname, relname, set_name FROM spock.tables WHERE relname LIKE '%' || $1 || '%' ORDER BY relid;
+PREPARE
+-- Turn on the allow_ddl_from_functions GUC
+ALTER SYSTEM SET spock.allow_ddl_from_functions = on;
+WARNING:  This DDL statement will not be replicated.
+ALTER SYSTEM
+SELECT pg_reload_conf();
+ pg_reload_conf 
+----------------
+ t
+(1 row)
+
+SELECT pg_sleep(0.5);
+ pg_sleep 
+----------
+ 
+(1 row)
+
+SHOW spock.allow_ddl_from_functions;
+ spock.allow_ddl_from_functions 
+--------------------------------
+ on
+(1 row)
+
+-- Validate replicated functions, procedures, tables
+\df add_column*
+                                                                                List of functions
+ Schema |           Name           | Result data type |                                                Argument data types                                                 | Type 
+--------+--------------------------+------------------+--------------------------------------------------------------------------------------------------------------------+------
+ public | add_column_to_table_proc |                  | IN table_name character varying, IN varname character varying, IN vartype character varying, INOUT success boolean | proc
+(1 row)
+
+\df remove_column*
+                                                     List of functions
+ Schema |           Name           | Result data type |                     Argument data types                     | Type 
+--------+--------------------------+------------------+-------------------------------------------------------------+------
+ public | remove_column_from_table | boolean          | table_name character varying, column_name character varying | func
+(1 row)
+
+\df employee_insert_trigger
+                                List of functions
+ Schema |          Name           | Result data type | Argument data types | Type 
+--------+-------------------------+------------------+---------------------+------
+ public | employee_insert_trigger | trigger          |                     | func
+(1 row)
+
+\d+ tab1_proc_on
+                                          Table "public.tab1_proc_on"
+  Column  |     Type     | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+----------+--------------+-----------+----------+---------+----------+-------------+--------------+-------------
+ id       | integer      |           | not null |         | plain    |             |              | 
+ col1     | text         |           |          |         | extended |             |              | 
+ col2     | integer      |           |          |         | plain    |             |              | 
+ new_col1 | character(1) |           |          |         | extended |             |              | 
+ new_col2 | boolean      |           |          |         | plain    |             |              | 
+Indexes:
+    "tab1_proc_on_pkey" PRIMARY KEY, btree (id)
+Access method: heap
+
+\d+ tab2_func_on
+                                       Table "public.tab2_func_on"
+ Column |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+--------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
+ id     | integer |           | not null |         | plain    |             |              | 
+ col1   | text    |           |          |         | extended |             |              | 
+ col2   | integer |           |          |         | plain    |             |              | 
+ col4   | integer |           |          |         | plain    |             |              | 
+ col6   | integer |           |          |         | plain    |             |              | 
+ col7   | text    |           |          |         | extended |             |              | 
+ col8   | integer |           |          |         | plain    |             |              | 
+Indexes:
+    "tab2_func_on_pkey" PRIMARY KEY, btree (id)
+Access method: heap
+
+\d+ tab3_anon_on
+                                       Table "public.tab3_anon_on"
+ Column |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+--------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
+ id     | integer |           | not null |         | plain    |             |              | 
+ col1   | text    |           |          |         | extended |             |              | 
+ col2   | integer |           |          |         | plain    |             |              | 
+Indexes:
+    "tab3_anon_on_pkey" PRIMARY KEY, btree (id)
+Access method: heap
+
+\d+ tab4_proc_off
+                                      Table "public.tab4_proc_off"
+ Column |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+--------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
+ id     | integer |           | not null |         | plain    |             |              | 
+ col1   | text    |           |          |         | extended |             |              | 
+ col2   | integer |           |          |         | plain    |             |              | 
+Indexes:
+    "tab4_proc_off_pkey" PRIMARY KEY, btree (id)
+Access method: heap
+
+\d+ tab5_func_off
+                                      Table "public.tab5_func_off"
+ Column |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+--------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
+ id     | integer |           | not null |         | plain    |             |              | 
+ col1   | text    |           |          |         | extended |             |              | 
+ col2   | integer |           |          |         | plain    |             |              | 
+ col3   | text    |           |          |         | extended |             |              | 
+ col4   | integer |           |          |         | plain    |             |              | 
+ col5   | text    |           |          |         | extended |             |              | 
+ col6   | integer |           |          |         | plain    |             |              | 
+ col7   | text    |           |          |         | extended |             |              | 
+ col8   | integer |           |          |         | plain    |             |              | 
+Indexes:
+    "tab5_func_off_pkey" PRIMARY KEY, btree (id)
+Access method: heap
+
+\d+ tab6_anon_off
+                                      Table "public.tab6_anon_off"
+ Column |  Type   | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+--------+---------+-----------+----------+---------+----------+-------------+--------------+-------------
+ id     | integer |           | not null |         | plain    |             |              | 
+ col1   | text    |           |          |         | extended |             |              | 
+ col2   | integer |           |          |         | plain    |             |              | 
+Indexes:
+    "tab6_anon_off_pkey" PRIMARY KEY, btree (id)
+Access method: heap
+
+\d+ tab7_anon_off
+Did not find any relation named "tab7_anon_off".
+\d+ tab_emp
+                                                 Table "public.tab_emp"
+ Column |          Type          | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+--------+------------------------+-----------+----------+---------+----------+-------------+--------------+-------------
+ id     | integer                |           | not null |         | plain    |             |              | 
+ name   | character varying(255) |           |          |         | extended |             |              | 
+ salary | numeric                |           |          |         | main     |             |              | 
+Indexes:
+    "tab_emp_pkey" PRIMARY KEY, btree (id)
+Triggers:
+    employee_insert_trigger AFTER INSERT ON tab_emp FOR EACH ROW EXECUTE FUNCTION employee_insert_trigger()
+Access method: heap
+
+\dn john
+List of schemas
+ Name | Owner 
+------+-------
+ john | rocky
+(1 row)
+
+\dn alice
+List of schemas
+ Name | Owner 
+------+-------
+(0 rows)
+
+EXECUTE spocktab('tab'); 
+ nspname |    relname    | set_name 
+---------+---------------+----------
+ public  | tab1_proc_on  | default
+ public  | tab2_func_on  | default
+ public  | tab3_anon_on  | default
+ public  | tab6_anon_off | default
+ public  | tab4_proc_off | default
+ public  | tab5_func_off | default
+ public  | tab_emp       | default
+(7 rows)
+
+-- Drop tables 
+DO $$
+BEGIN
+  EXECUTE 'DROP TABLE tab1_proc_on';
+  EXECUTE 'DROP TABLE tab2_func_on';
+  EXECUTE 'DROP TABLE tab3_anon_on';
+  EXECUTE 'DROP TABLE tab4_proc_off';
+  EXECUTE 'DROP TABLE tab5_func_off';
+  EXECUTE 'DROP TABLE tab6_anon_off';
+  EXECUTE 'DROP TABLE tab_emp CASCADE';
+  EXECUTE 'DROP PROCEDURE add_column_to_table_proc';
+  EXECUTE 'DROP FUNCTION remove_column_from_table';
+  EXECUTE 'DROP FUNCTION employee_insert_trigger';
+  EXECUTE 'DROP SCHEMA john';
+END
+$$;
+NOTICE:  drop cascades to table tab1_proc_on membership in replication set default
+INFO:  DDL statement replicated.
+NOTICE:  drop cascades to table tab2_func_on membership in replication set default
+INFO:  DDL statement replicated.
+NOTICE:  drop cascades to table tab3_anon_on membership in replication set default
+INFO:  DDL statement replicated.
+NOTICE:  drop cascades to table tab4_proc_off membership in replication set default
+INFO:  DDL statement replicated.
+NOTICE:  drop cascades to table tab5_func_off membership in replication set default
+INFO:  DDL statement replicated.
+NOTICE:  drop cascades to table tab6_anon_off membership in replication set default
+INFO:  DDL statement replicated.
+NOTICE:  drop cascades to table tab_emp membership in replication set default
+INFO:  DDL statement replicated.
+INFO:  DDL statement replicated.
+INFO:  DDL statement replicated.
+INFO:  DDL statement replicated.
+INFO:  DDL statement replicated.
+DO
+DO $$
+BEGIN
+  EXECUTE 'DROP TABLE tab7_anon_off'; --should not exist
+END
+$$;
+ERROR:  table "tab7_anon_off" does not exist
+CONTEXT:  SQL statement "DROP TABLE tab7_anon_off"
+PL/pgSQL function inline_code_block line 3 at EXECUTE
+--should error out
+DROP SCHEMA alice;
+ERROR:  schema "alice" does not exist
