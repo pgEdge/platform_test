@@ -6,7 +6,7 @@ def EXIT_PASS():
     exit_message("Pass", p_rc=0)
 
 def EXIT_FAIL():
-    else:
+    print("fail")
     exit_message("Fail", p_rc=1)
 
 
