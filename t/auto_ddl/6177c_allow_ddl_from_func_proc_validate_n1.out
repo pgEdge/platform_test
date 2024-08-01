@@ -1,0 +1,95 @@
+-- Validate replicated functions, procedures, tables
+-- No objects sould exist except tab7
+\df add_column*
+                       List of functions
+ Schema | Name | Result data type | Argument data types | Type 
+--------+------+------------------+---------------------+------
+(0 rows)
+
+\df remove_column*
+                       List of functions
+ Schema | Name | Result data type | Argument data types | Type 
+--------+------+------------------+---------------------+------
+(0 rows)
+
+\df employee_insert_trigger
+                       List of functions
+ Schema | Name | Result data type | Argument data types | Type 
+--------+------+------------------+---------------------+------
+(0 rows)
+
+\d tab1_proc_on
+Did not find any relation named "tab1_proc_on".
+\d tab2_func_on
+Did not find any relation named "tab2_func_on".
+\d tab3_anon_on
+Did not find any relation named "tab3_anon_on".
+\d tab4_proc_off
+Did not find any relation named "tab4_proc_off".
+\d tab5_func_off
+Did not find any relation named "tab5_func_off".
+\d tab6_anon_off
+Did not find any relation named "tab6_anon_off".
+\d tab7_anon_off
+           Table "public.tab7_anon_off"
+ Column |  Type   | Collation | Nullable | Default 
+--------+---------+-----------+----------+---------
+ id     | integer |           |          | 
+ col1   | text    |           |          | 
+ col2   | integer |           |          | 
+
+\d tab_emp
+Did not find any relation named "tab_emp".
+\dn john
+List of schemas
+ Name | Owner 
+------+-------
+(0 rows)
+
+\dn alice
+List of schemas
+ Name  | Owner 
+-------+-------
+ alice | rocky
+(1 row)
+
+-- Turn off the allow_ddl_from_functions GUC so that these drops are not auto replicated
+ALTER SYSTEM SET spock.allow_ddl_from_functions = off;
+WARNING:  This DDL statement will not be replicated.
+ALTER SYSTEM
+SELECT pg_reload_conf();
+ pg_reload_conf 
+----------------
+ t
+(1 row)
+
+SELECT pg_sleep(0.5);
+ pg_sleep 
+----------
+ 
+(1 row)
+
+SHOW spock.allow_ddl_from_functions;
+ spock.allow_ddl_from_functions 
+--------------------------------
+ off
+(1 row)
+
+-- Drop tables
+DO $$
+BEGIN
+  EXECUTE 'DROP TABLE tab7_anon_off';
+  EXECUTE 'DROP SCHEMA alice';
+END
+$$;
+DO
+-- Turn on the allow_ddl_from_functions GUC
+ALTER SYSTEM SET spock.allow_ddl_from_functions = on;
+WARNING:  This DDL statement will not be replicated.
+ALTER SYSTEM
+SELECT pg_reload_conf();
+ pg_reload_conf 
+----------------
+ t
+(1 row)
+
