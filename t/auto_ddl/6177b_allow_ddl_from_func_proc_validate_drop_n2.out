@@ -54,6 +54,7 @@ SHOW spock.allow_ddl_from_functions;
  col2     | integer      |           |          |         | plain    |             |              | 
  new_col1 | character(1) |           |          |         | extended |             |              | 
  new_col2 | boolean      |           |          |         | plain    |             |              | 
+ new_col3 | text         |           |          |         | extended |             |              | 
 Indexes:
     "tab1_proc_on_pkey" PRIMARY KEY, btree (id)
 Access method: heap
@@ -67,7 +68,6 @@ Access method: heap
  col2   | integer |           |          |         | plain    |             |              | 
  col4   | integer |           |          |         | plain    |             |              | 
  col6   | integer |           |          |         | plain    |             |              | 
- col7   | text    |           |          |         | extended |             |              | 
  col8   | integer |           |          |         | plain    |             |              | 
 Indexes:
     "tab2_func_on_pkey" PRIMARY KEY, btree (id)
@@ -151,6 +151,19 @@ List of schemas
 ------+-------
 (0 rows)
 
+\dn cena
+List of schemas
+ Name | Owner 
+------+-------
+ cena | rocky
+(1 row)
+
+\dn wonderland
+List of schemas
+ Name | Owner 
+------+-------
+(0 rows)
+
 EXECUTE spocktab('tab'); 
  nspname |    relname    | set_name 
 ---------+---------------+----------
@@ -177,6 +190,7 @@ BEGIN
   EXECUTE 'DROP FUNCTION remove_column_from_table';
   EXECUTE 'DROP FUNCTION employee_insert_trigger';
   EXECUTE 'DROP SCHEMA john';
+  EXECUTE 'DROP SCHEMA cena';
 END
 $$;
 NOTICE:  drop cascades to table tab1_proc_on membership in replication set default
@@ -197,6 +211,7 @@ INFO:  DDL statement replicated.
 INFO:  DDL statement replicated.
 INFO:  DDL statement replicated.
 INFO:  DDL statement replicated.
+INFO:  DDL statement replicated.
 DO
 DO $$
 BEGIN
@@ -206,6 +221,8 @@ $$;
 ERROR:  table "tab7_anon_off" does not exist
 CONTEXT:  SQL statement "DROP TABLE tab7_anon_off"
 PL/pgSQL function inline_code_block line 3 at EXECUTE
---should error out
+--should error out as these shouldn't be replicated to n2
 DROP SCHEMA alice;
 ERROR:  schema "alice" does not exist
+DROP SCHEMA wonderland;
+ERROR:  schema "wonderland" does not exist
