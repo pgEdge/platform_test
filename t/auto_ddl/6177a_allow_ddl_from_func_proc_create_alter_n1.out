@@ -172,6 +172,21 @@ INFO:  DDL statement replicated.
 INSERT INTO tab_emp (id, name, salary) VALUES (1, 'John', 50000);
 INFO:  DDL statement replicated.
 INSERT 0 1
+-- exercises nested/indirect DDL. Schema cena should be auto replicated
+-- table DDLs should also be replicated
+DO $$
+DECLARE
+    success BOOLEAN; 
+BEGIN
+   INSERT INTO tab_emp (id, name, salary) VALUES (3, 'Cena', 60000);
+   CALL add_column_to_table_proc('tab1_proc_on', 'new_col3', 'TEXT', success);
+   PERFORM remove_column_from_table('tab2_func_on', 'col7');
+END
+$$;
+INFO:  DDL statement replicated.
+INFO:  DDL statement replicated.
+INFO:  DDL statement replicated.
+DO
 EXECUTE spocktab('tab'); 
  nspname |    relname    | set_name 
 ---------+---------------+----------
@@ -246,6 +261,19 @@ SELECT remove_column_from_table('tab5_func_off', 'col5');
 -- Trigger DDL execution via trigger
 INSERT INTO tab_emp (id, name, salary) VALUES (2, 'Alice', 60000);
 INSERT 0 1
+-- Perform DML within anonymous block that would then execute DDL in its trigger
+-- exercises nested DDL , wonderland schema should not be replicated and table DDLs
+-- should also stay local
+DO $$
+DECLARE
+    success BOOLEAN; 
+BEGIN
+   INSERT INTO tab_emp (id, name, salary) VALUES (4, 'Wonderland', 70000);
+   CALL add_column_to_table_proc('tab4_proc_off', 'new_col3', 'TEXT', success);
+   PERFORM remove_column_from_table('tab5_func_off', 'col7');
+END
+$$;
+DO
 -- Validate table structures and schemas
 \df add_column*
                                                                                 List of functions
@@ -277,6 +305,7 @@ INSERT 0 1
  col2     | integer      |           |          |         | plain    |             |              | 
  new_col1 | character(1) |           |          |         | extended |             |              | 
  new_col2 | boolean      |           |          |         | plain    |             |              | 
+ new_col3 | text         |           |          |         | extended |             |              | 
 Indexes:
     "tab1_proc_on_pkey" PRIMARY KEY, btree (id)
 Access method: heap
@@ -290,7 +319,6 @@ Access method: heap
  col2   | integer |           |          |         | plain    |             |              | 
  col4   | integer |           |          |         | plain    |             |              | 
  col6   | integer |           |          |         | plain    |             |              | 
- col7   | text    |           |          |         | extended |             |              | 
  col8   | integer |           |          |         | plain    |             |              | 
 Indexes:
     "tab2_func_on_pkey" PRIMARY KEY, btree (id)
@@ -316,6 +344,7 @@ Access method: heap
  col2     | integer      |           |          |         | plain    |             |              | 
  new_col1 | character(1) |           |          |         | extended |             |              | 
  new_col2 | boolean      |           |          |         | plain    |             |              | 
+ new_col3 | text         |           |          |         | extended |             |              | 
 Indexes:
     "tab4_proc_off_pkey" PRIMARY KEY, btree (id)
 Access method: heap
@@ -329,7 +358,6 @@ Access method: heap
  col2   | integer |           |          |         | plain    |             |              | 
  col4   | integer |           |          |         | plain    |             |              | 
  col6   | integer |           |          |         | plain    |             |              | 
- col7   | text    |           |          |         | extended |             |              | 
  col8   | integer |           |          |         | plain    |             |              | 
 Indexes:
     "tab5_func_off_pkey" PRIMARY KEY, btree (id)
@@ -377,6 +405,20 @@ List of schemas
  Name  | Owner 
 -------+-------
  alice | rocky
+(1 row)
+
+\dn cena
+List of schemas
+ Name | Owner 
+------+-------
+ cena | rocky
+(1 row)
+
+\dn wonderland
+  List of schemas
+    Name    | Owner 
+------------+-------
+ wonderland | rocky
 (1 row)
 
 EXECUTE spocktab('tab'); 

@@ -104,6 +104,18 @@ SELECT remove_column_from_table('tab2_func_on', 'col5');
 -- Trigger DDL execution via trigger, that should create a schema named john and auto replicate it
 INSERT INTO tab_emp (id, name, salary) VALUES (1, 'John', 50000);
 
+-- exercises nested/indirect DDL. Schema cena should be auto replicated
+-- table DDLs should also be replicated
+DO $$
+DECLARE
+    success BOOLEAN; 
+BEGIN
+   INSERT INTO tab_emp (id, name, salary) VALUES (3, 'Cena', 60000);
+   CALL add_column_to_table_proc('tab1_proc_on', 'new_col3', 'TEXT', success);
+   PERFORM remove_column_from_table('tab2_func_on', 'col7');
+END
+$$;
+
 EXECUTE spocktab('tab'); 
 
 ------
@@ -135,6 +147,19 @@ SELECT remove_column_from_table('tab5_func_off', 'col5');
 -- Trigger DDL execution via trigger
 INSERT INTO tab_emp (id, name, salary) VALUES (2, 'Alice', 60000);
 
+-- Perform DML within anonymous block that would then execute DDL in its trigger
+-- exercises nested DDL , wonderland schema should not be replicated and table DDLs
+-- should also stay local
+DO $$
+DECLARE
+    success BOOLEAN; 
+BEGIN
+   INSERT INTO tab_emp (id, name, salary) VALUES (4, 'Wonderland', 70000);
+   CALL add_column_to_table_proc('tab4_proc_off', 'new_col3', 'TEXT', success);
+   PERFORM remove_column_from_table('tab5_func_off', 'col7');
+END
+$$;
+
 -- Validate table structures and schemas
 \df add_column*
 \df remove_column*
@@ -149,5 +174,7 @@ INSERT INTO tab_emp (id, name, salary) VALUES (2, 'Alice', 60000);
 \d+ tab_emp
 \dn john
 \dn alice
+\dn cena
+\dn wonderland
 
 EXECUTE spocktab('tab'); 

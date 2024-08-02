@@ -21,6 +21,8 @@ SHOW spock.allow_ddl_from_functions;
 \d+ tab_emp
 \dn john
 \dn alice
+\dn cena
+\dn wonderland
 EXECUTE spocktab('tab'); 
 -- Drop tables 
 DO $$
@@ -36,6 +38,7 @@ BEGIN
   EXECUTE 'DROP FUNCTION remove_column_from_table';
   EXECUTE 'DROP FUNCTION employee_insert_trigger';
   EXECUTE 'DROP SCHEMA john';
+  EXECUTE 'DROP SCHEMA cena';
 END
 $$;
 
@@ -44,5 +47,6 @@ BEGIN
   EXECUTE 'DROP TABLE tab7_anon_off'; --should not exist
 END
 $$;
---should error out
+--should error out as these shouldn't be replicated to n2
 DROP SCHEMA alice;
+DROP SCHEMA wonderland;
