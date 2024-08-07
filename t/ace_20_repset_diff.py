@@ -12,6 +12,9 @@ repset = "default"
 
 ## Basic Functionality Tests for `ace repset-diff`
 
+# Note: relies on populated repset to run so cannot be run in ace_basic
+#       can run successfully in ace_long
+
 # Matching Repsets
 cmd_node = f"ace repset-diff {cluster} {repset}"
 res=util_test.run_cmd("repset-diff", cmd_node, f"{home_dir}")

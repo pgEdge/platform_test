@@ -18,6 +18,7 @@ dbname = os.getenv('EDGE_DB')
 startport = int(os.getenv('EDGE_START_PORT'))
 pgversion = os.getenv('EDGE_INST_VERSION')
 pgname = os.getenv('EDGE_COMPONENT')
+spockver = os.getenv('EDGE_SPOCK_DEFAULT_VER')
 
 ## Third Setup Script- Turns on Nodes for Testing
 
@@ -26,7 +27,7 @@ for n in range(1,numnodes+1):
     os.chdir(os.path.join(f"n{n}", "pgedge"))
 
     # Deletes copydir
-    cmd_node = f"./{clicommand} setup -U {pgusn} -P {pgpsw} -d {dbname} -p {startport + n - 1} --pg_ver {pgversion}"
+    cmd_node = f"./{clicommand} setup -U {pgusn} -P {pgpsw} -d {dbname} -p {startport + n - 1} --pg_ver {pgversion} --spock_ver \"{spockver}\""
     res=subprocess.run(cmd_node, shell=True, capture_output=True, text=True)
     util_test.printres(res)
     if res.returncode == 1:
