@@ -82,8 +82,8 @@ print("*"*100)
 # Needle and Haystack
 # Confirm the command worked by looking for:
 
-#check=util_test.contains((init.stdout),"cluster")
-#print("*"*100)
+check=util_test.contains((init.stdout),"sub_n4n2")
+print("*"*100)
 
-#util_test.exit_message(f"Pass - {os.path.basename(__file__)}", 0)
+util_test.exit_message(f"Pass - {os.path.basename(__file__)}", 0)
 
