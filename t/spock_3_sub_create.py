@@ -20,6 +20,7 @@ repuser=os.getenv("EDGE_REPUSER","pgedge")
 pw=os.getenv("EDGE_PASSWORD","lcpasswd")
 db=os.getenv("EDGE_DB","lcdb")
 host=os.getenv("EDGE_HOST","localhost")
+spock_delay=os.getenv("SPOCK_DELAY", None)
 
 port_array = []
 for n in range(1,num_nodes+1):
@@ -31,11 +32,19 @@ for n in range(1,num_nodes+1):
         if n!=z:
             ## Create Subs
             cmd_node = f"spock sub-create sub_n{n}n{z} 'host=127.0.0.1 port={port_array[z-1]} user={repuser} dbname={db}' {db}"
+
+            if spock_delay is not None:
+                try:
+                    spock_delay = int(spock_delay)
+                    cmd_node += f" -a={spock_delay}"
+
+                except Exception as e:
+                    print(f"Error in getting spock_delay: {e}")
+
             res=util_test.run_cmd("Sub Create", cmd_node, f"{cluster_dir}/n{n}")
             print(res)
             if res.returncode == 1 or "sub_create" not in res.stdout:
     	        util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Sub Create", 1) 
-            port = port + 1
 
 ## Sub Show Status Test
 cmd_node = f"spock sub-show-status sub_n1n2 {db}"
