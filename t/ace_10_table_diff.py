@@ -1,5 +1,6 @@
 import sys, os, util_test, subprocess
 from ace_util import diff_assert_match, diff_assert_mismatch, diff_assert_fail
+import ace_util
 
 ## Print Script
 print(f"Starting - {os.path.basename(__file__)}")
@@ -29,7 +30,7 @@ if not diff_assert_mismatch("foo_diff_row"):
 print("*" * 100)
 
 # No Primary Keys
-if not diff_assert_fail("foo_nopk", "No primary key found"):
+if not diff_assert_fail("foo_nopk", ace_util.DIFF_ERR_NOPKEY):
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - No pk", 1)
 print("*" * 100)
 
