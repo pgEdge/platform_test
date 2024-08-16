@@ -4,6 +4,11 @@ import time
 from util_datagen import generate_table, remove_table, insert_into
 from ace_util import diff_assert_match, diff_assert_mismatch, rerun_assert_match, rerun_assert_diff_count
 
+import spock_1_setup
+import spock_2_node_create
+import spock_3_sub_create
+import spock_4_repset_add_table
+
 ## Print Script
 print(f"Starting - {os.path.basename(__file__)}")
 
@@ -37,44 +42,50 @@ if not diff_assert_match(table_name):
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Matching Tables")
 
 
-# Step 1: (I will just be importing the spock scrips which might cause strange behavior)
-os.environ["SPOCK_DELAY"] = "15"
-
-import spock_1_setup
-import spock_2_node_create
-import spock_3_sub_create
-import spock_4_repset_add_table
+# Step 1:
+os.environ["SPOCK_DELAY"] = "25"
+spock_1_setup.run()
+spock_2_node_create.run()
+spock_3_sub_create.run()
+spock_4_repset_add_table.run()
 
 
 # Step 2:
+start = time.time()
+print(time.time())
 insert_into("t1", form, 10, nodes=[1])
-time.sleep(5.0)
+time.sleep(5.0 + start - time.time())
 
 
 # Step 3:
+print(time.time())
 insert_into("t1", form, 10, nodes=[1])
-time.sleep(5.0)
+time.sleep(10.0 + start - time.time())
 
 
 # Step 4:
+print(time.time())
 found_mismatch, diff_file = diff_assert_mismatch(table_name, get_diff=True)
 if not found_mismatch:
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - 20 Diffs")
 
 
 # Step 5:
+print(time.time())
 if not rerun_assert_diff_count(table_name, diff_file, 20):
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Non-Matching Rerun")
-time.sleep(6.0)
+time.sleep(16.0 + start - time.time())
 
 
 # Step 6:
+print(time.time())
 if not rerun_assert_diff_count(table_name, diff_file, 10):
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Non-Matching Rerun")
-time.sleep(5.0)
+time.sleep(21.0 + start - time.time())
 
 
 # Step 7:
+print(time.time())
 if not rerun_assert_match(table_name, diff_file):
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Matching Rerun")
 
