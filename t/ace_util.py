@@ -1,4 +1,5 @@
 import util_test, os, subprocess
+from typing import Union
 
 # Utility file for ACE tests
 
@@ -17,6 +18,12 @@ DIFF_MISMATCH = "TABLES DO NOT MATCH"
 DIFF_ERR_NOPKEY    = "No primary key found"
 DIFF_ERR_NOCLUSTER = "cluster not found"
 DIFF_ERR_NOTABLE   = "Invalid table name '{table_name}'"
+DIFF_ERR_NODB      = "Database '{db_name}' not found in cluster '{cluster}'"
+DIFF_ERR_SMALLBR   = "Block row size should be >= 1000"
+DIFF_ERR_CPURANGE  = "Invalid value range for ACE_MAX_CPU_RATIO or --max_cpu_ratio"
+DIFF_ERR_CPUTYPE   = "Invalid values for ACE_MAX_CPU_RATIO"
+DIFF_ERR_OUTPUTF   = "table-diff currently supports only csv and json output formats"
+DIFF_ERR_DUPNODE   = "Ignoring duplicate node names"
 
 
 # GENERIC FUNCTIONS
@@ -43,7 +50,7 @@ def diff_assert_diff_count(table_name: str, expected_count: int, args: dict[str:
     return res.returncode == 0 and DIFF_COUNT.format( number=expected_count ) in res.stdout
 
 
-def diff_assert_mismatch(table_name: str, args: dict[str: any] = {}, quiet = False, get_diff = False) -> bool | tuple[bool, str]:
+def diff_assert_mismatch(table_name: str, args: dict[str: any] = {}, quiet = False, get_diff = False) -> Union[bool, tuple[bool, str]]:
     res = run_table_diff(table_name, args=args)
     if not quiet: util_test.printres(res)
     ret = res.returncode == 0 and DIFF_MISMATCH in res.stdout
@@ -53,7 +60,7 @@ def diff_assert_mismatch(table_name: str, args: dict[str: any] = {}, quiet = Fal
     return ret
 
 
-def diff_assert_fail(table_name: str, exit_statment: str, args: dict[str: any] = {}, quiet = False, call_override: str | None = None) -> bool:
+def diff_assert_fail(table_name: str, exit_statment: str, args: dict[str: any] = {}, quiet = False, call_override: str = None) -> bool:
     if call_override: res = run_override(call_override)
     else: res = run_table_diff(table_name, args=args)
     if not quiet: util_test.printres(res)
@@ -88,7 +95,7 @@ def rerun_assert_diff_count(table_name: str, diff_file: str, expected_count: int
     return res.returncode == 0 and DIFF_COUNT.format( number=expected_count ) in res.stdout
 
 
-def rerun_assert_mismatch(table_name: str, diff_file: str, args: dict[str: any] = {}, quiet = False, get_diff = False) -> bool | tuple[bool, str]:
+def rerun_assert_mismatch(table_name: str, diff_file: str, args: dict[str: any] = {}, quiet = False, get_diff = False) -> Union[bool, tuple[bool, str]]:
     res = run_table_rerun(table_name, diff_file, args=args)
     if not quiet: util_test.printres(res)
     ret = res.returncode == 0 and DIFF_MISMATCH in res.stdout
@@ -98,7 +105,7 @@ def rerun_assert_mismatch(table_name: str, diff_file: str, args: dict[str: any] 
     return ret
 
 
-def diff_assert_fail(table_name: str, diff_file: str, exit_statment: str, args: dict[str: any] = {}, quiet = False, call_override: str | None = None) -> bool:
+def rerun_assert_fail(table_name: str, diff_file: str, exit_statment: str, args: dict[str: any] = {}, quiet = False, call_override: str = None) -> bool:
     if call_override: res = run_override(call_override)
     else: res = run_table_rerun(table_name, diff_file, args=args)
     if not quiet: util_test.printres(res)

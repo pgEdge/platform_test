@@ -30,7 +30,7 @@ if not diff_assert_fail("", ace_util.DIFF_ERR_NOTABLE.format( table_name = "pabl
 print("*" * 100)
 
 # Non Existent Database Name
-if not diff_assert_fail("foo", ace_util.DIFF_ERR_NODB.format( db_name = "notreal", cluster = cluster ), args={"--dbname": "not_real"}):
+if not diff_assert_fail("foo", ace_util.DIFF_ERR_NODB.format( db_name = "not_real", cluster = cluster ), args={"--dbname": "not_real"}):
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Database Name", 1)
 print("*" * 100)
 
@@ -55,7 +55,7 @@ if not diff_assert_fail("foo", ace_util.DIFF_ERR_CPURANGE, args={"--max_cpu_rati
 print("*" * 100)
 
 # Unsupported Output Format
-if not diff_assert_fail("foo", ace_util.DIFF_ERR_OUTPUTF, args={"output": "html"}):
+if not diff_assert_fail("foo", ace_util.DIFF_ERR_OUTPUTF, args={"--output": "html"}):
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Output HTML", 1)
 print("*" * 100)
 

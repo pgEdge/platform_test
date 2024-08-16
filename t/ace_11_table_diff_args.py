@@ -19,11 +19,6 @@ if not diff_assert_match("foo", args={"--block_rows": 1001}):
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Block Rows")
 print("*" * 100)
 
-# Max CPU Ratio Given
-if not diff_assert_match("foo", args={"--max_cpu_ratio": 1001}):
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Max CPU Ratio", 1)
-print("*" * 100)
-
 # Max CPU float < 1
 if not diff_assert_match("foo", args={"--max_cpu_ratio": 0.5}):
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Max CPU Ratio < 1", 1) 
