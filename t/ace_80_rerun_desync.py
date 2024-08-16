@@ -75,7 +75,7 @@ time.sleep(5.0)
 
 
 # Step 7:
-if not rerun_assert_match(table_name, diff_file)
+if not rerun_assert_match(table_name, diff_file):
     util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Matching Rerun")
 
 
