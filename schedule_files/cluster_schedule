@@ -6,6 +6,7 @@ t/cluster-json-invalid-file.py
 t/cluster-init.py
 t/get_info.py
 t/cluster-remove-node.py
+t/cluster-add-node.py
 t/cluster-list-nodes.py
 t/cluster-init-bad-json.py
 t/cluster-replication-check.py

@@ -23,7 +23,6 @@ spockpath=os.getenv("EDGE_SPOCK_PATH")
 dbname=os.getenv("EDGE_DB","lcdb")
 node_name="n1"
 cwd=os.getcwd()
-
 #print("*"*100)
 
 print(f"home_dir = {home_dir}\n")
@@ -44,6 +43,8 @@ new_dict = [{"db_user": "alice","db_password": "password","db_name": "alicesdb"}
 
 file_data["pgedge"]["databases"]=new_dict
 
+print(f"The database definition contains: {file_data}")
+
 # write the file back
 with open(f"{cluster_dir}/{cluster_name}.json", "w") as file:
     file.write(json.dumps(file_data))
@@ -63,6 +64,8 @@ with open(f"{cluster_dir}/{cluster_name}.json", 'r') as file:
     data["node_groups"][1]["path"] = new_path_1
 
 newdata = json.dumps(data, indent=4)
+print(f"Our demo.json file is updated: {newdata}")
+
 with open(f"{cluster_dir}/{cluster_name}.json", 'w') as file:
     file.write(newdata)
     
@@ -82,109 +85,95 @@ print("*"*100)
 
 ## It looks like there is a bug, wherein the password for lcusr is lost/not set in a multi-db cluster setup.
 
+node_num = "n1"
+res=util_test.source_pg_env(cluster_dir, pgv, node_num);
+
 value = util_test.write_psql("ALTER ROLE lcusr LOGIN PASSWORD 'password';","127.0.0.1","lcdb","6432","password","alice")
 print(value)
-print(res)
 
 value = util_test.write_psql("ALTER ROLE lcusr LOGIN PASSWORD 'password';","127.0.0.1","lcdb","6433","password","alice")
 print(value)
-print(res)
 
 ## Create a database superuser (we're about to take superuser privs away from lcusr, so use dbsuperuser to log in for diagnostics):
 
 value = util_test.write_psql("CREATE ROLE dbsuperuser WITH SUPERUSER LOGIN PASSWORD 'password';","127.0.0.1","lcdb","6432","password","alice")
-print(f"We're creating a database superuser here: {res},{value}")
+
+print(f"We're creating a database superuser here: {value}")
 
 value = util_test.write_psql("CREATE  ROLE dbsuperuser WITH SUPERUSER LOGIN PASSWORD 'password';","127.0.0.1","alicesdb","6433","password","alice")
-print(f"We're creating a database superuser here: {res},{value}")
+print(f"We're creating a database superuser here: {value}")
 
 
 
 ## Set permissions for Alice and lcusr:
 
 value = util_test.write_psql("ALTER ROLE alice WITH NOSUPERUSER;","127.0.0.1","alicesdb","6432","password","alice")
-print(res)
 
 value = util_test.write_psql("ALTER ROLE lcusr WITH NOSUPERUSER;","127.0.0.1","lcdb","6432","password","lcusr")
-print(res)
 
 value = util_test.write_psql("ALTER ROLE alice WITH NOSUPERUSER;","127.0.0.1","alicesdb","6433","password","alice")
-print(res)
 
 value = util_test.write_psql("ALTER ROLE lcusr WITH NOSUPERUSER;","127.0.0.1","lcdb","6433","password","lcusr")
-print(res)
 
 ## Revoke connect:
 
 value = util_test.write_psql("REVOKE CONNECT ON DATABASE alicesdb FROM PUBLIC;","127.0.0.1","alicesdb","6432","password","alice")
-print(res)
 
 value = util_test.write_psql("REVOKE CONNECT ON DATABASE lcdb FROM PUBLIC;","127.0.0.1","lcdb","6432","password","lcusr")
-print(res)
 
 value = util_test.write_psql("REVOKE CONNECT ON DATABASE alicesdb FROM PUBLIC;","127.0.0.1","alicesdb","6433","password","alice")
-print(res)
 
 value = util_test.write_psql("REVOKE CONNECT ON DATABASE lcdb FROM PUBLIC;","127.0.0.1","lcdb","6433","password","lcusr")
-print(res)
+
 
 ## Create Alice's table on nodes 1 and 2: 
 
 value = util_test.write_psql("CREATE TABLE IF NOT EXISTS alicestable (employeeID INT PRIMARY KEY,employeeName VARCHAR(40),employeeMail VARCHAR(40));","127.0.0.1","alicesdb","6432","password","alice")
-print(res)
 
 value = util_test.write_psql("INSERT INTO alicestable VALUES (1,'a', 'b');","127.0.0.1","alicesdb","6432","password","alice")
-print(res)
 
 value = util_test.write_psql("CREATE TABLE IF NOT EXISTS alicestable (employeeID INT PRIMARY KEY,employeeName VARCHAR(40),employeeMail VARCHAR(40));","127.0.0.1","alicesdb","6433","password","alice")
-print(res)
 
 value = util_test.write_psql("INSERT INTO alicestable VALUES (1,'a', 'b');","127.0.0.1","alicesdb","6433","password","alice")
-print(res)
+
 
 ## Create lcusr's table on nodes 1 and 2:
 
 value = util_test.write_psql("CREATE TABLE IF NOT EXISTS lcusrstable (employeeID INT PRIMARY KEY,employeeName VARCHAR(40),employeeMail VARCHAR(40));","127.0.0.1","lcdb","6432","password","lcusr")
-print(res)
 
 value = util_test.write_psql("INSERT INTO lcusrstable VALUES (1,'a', 'b');","127.0.0.1","lcdb","6432","password","lcusr")
 print(value)
-print(res)
 
 value = util_test.write_psql("CREATE TABLE IF NOT EXISTS lcusrstable (employeeID INT PRIMARY KEY,employeeName VARCHAR(40),employeeMail VARCHAR(40));","127.0.0.1","lcdb","6433","password","lcusr")
-print(res)
 
 value = util_test.write_psql("INSERT INTO lcusrstable VALUES (1,'a', 'b');","127.0.0.1","lcdb","6433","password","lcusr")
 print(value)
-print(res)
 
 ## Query the tables:
 
 value = util_test.write_psql("SELECT * FROM alicestable;","127.0.0.1","alicesdb","6432","password","alice")
-print(res)
 
 value = util_test.write_psql("SELECT * FROM alicestable;","127.0.0.1","alicesdb","6433","password","alice")
-print(res)
 
 value = util_test.write_psql("SELECT * FROM lcusrstable;","127.0.0.1","lcdb","6432","password","lcusr")
-print(res)
 
 value = util_test.write_psql("SELECT * FROM lcusrstable;","127.0.0.1","lcdb","6433","password","lcusr")
-print(res)
 
 ## Confirm that alice cannot query lcusr's tables, and vice versa:
 
 value = util_test.write_nofail_psql("SELECT * FROM lcusrstable;","127.0.0.1","lcdb","6432","password","alice")
-print(f"This command should show a failure to connect")
+
+print(f"This command should show a failure to connect: ")
 
 value = util_test.write_nofail_psql("SELECT * FROM lcusrstable;","127.0.0.1","lcdb","6433","password","alice")
-print(f"This command should show a failure to connect")
+print(f"This command should show a failure to connect: ")
 
 value = util_test.write_nofail_psql("SELECT * FROM alicestable;","127.0.0.1","alicesdb","6432","password","lcusr")
-print(f"This command should show a failure to connect")
+print(f"This command should show a failure to connect: ")
 
 value = util_test.write_nofail_psql("SELECT * FROM alicestable;","127.0.0.1","alicesdb","6433","password","lcusr")
-print(f"This command should show a failure to connect")
+print(f"This command should show a failure to connect: ")
+
 
 print(f"home_dir = {home_dir}\n")
 command2 = (f"cluster replication-check {cluster_name}")
@@ -198,8 +187,7 @@ print(f"res2 = {res2}\n")
 # res2 should include: "There were one or more errors while connecting to databases" or "relation "public.lcusrstable" does not exist"
 #
 
-# Needle and Haystack
+if res2.returncode != 0:
 
-check=util_test.needle_in_haystack(res2,"replicating")
-
+    util_test.EXIT_FAIL()
        

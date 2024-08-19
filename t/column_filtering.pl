@@ -36,9 +36,9 @@ my $cmd = qq(source $homedir1/$ENV{EDGE_COMPONENT}/pg16.env);
 print("cmd = $cmd\n");
 my($success, $error_message, $full_buf, $stdout_buf, $stderr_buf)= IPC::Cmd::run(command => $cmd, verbose => 0);
 ##
-   print("full_buf = @$full_buf\n");
-   print("stdout_buf = @$stdout_buf\n");
-   print("stderr_buf = @$stderr_buf\n");
+print("full_buf = @$full_buf\n");
+print("stdout_buf = @$stdout_buf\n");
+print("stderr_buf = @$stderr_buf\n");
 
 # I removed the check for the tables existence (since we can include the IF NOT EXISTS clause in the command):
 # Creating public.$ENV{EDGE_TABLE} Table
@@ -67,35 +67,25 @@ if(!(contains(@$stdout_buf1[0], "CREATE TABLE")))
 {
     exit(1);
 }
-   
-   print ("-"x50,"\n"); 
-   
-  
-print("We got to the second check");
+print ("-"x50,"\n"); 
     
 #Adding Table to the Repset 
 
-if($ENV{EDEGE_SETNAME} eq ""){
-  
-  
-       my $cmd2 = qq($ENV{EDGE_CLUSTER_DIR}/n1/pgedge/$ENV{EDGE_CLI} spock repset-add-table default employee $ENV{EDGE_DB} --columns emp_id,emp_first_name,emp_last_name,emp_address,emp_city_state,emp_country,emp_division,emp_date_added );
-    
-     print("cmd2 = $cmd2\n");
-     my($success2, $error_message2, $full_buf2, $stdout_buf2, $stderr_buf2)= IPC::Cmd::run(command => $cmd2, verbose => 0);
-     print("stdout_buf2 = @$stdout_buf2\n");
-     
-     if(!(contains(@$stdout_buf2[0], "Adding table")))
+#if($ENV{EDGE_SETNAME} eq "")
+
+my $cmd2 = qq($ENV{EDGE_CLUSTER_DIR}/n1/pgedge/$ENV{EDGE_CLI} spock repset-add-table default employee $ENV{EDGE_DB} --columns emp_id,emp_first_name,emp_last_name,emp_address,emp_city_state,emp_country,emp_division,emp_date_added );
+print("cmd2 = $cmd2\n");
+my($success2, $error_message2, $full_buf2, $stdout_buf2, $stderr_buf2)= IPC::Cmd::run(command => $cmd2, verbose => 0);
+print("stdout_buf2 = @$stdout_buf2\n");
+
+if(!(contains(@$stdout_buf2[0], "Adding table")))
 {
     exit(1);
+}     
+    else 
+{
+    print ("Table employee is already added to default\n");   
 }
-      
-} 
-else {
-   print ("Table employee is already added to default\n");
-    
-   
-}
-
 print ("-"x50,"\n"); 
    
 my $cmd3 = qq($homedir2/$ENV{EDGE_COMPONENT}/bin/psql -t -h $ENV{EDGE_HOST} -p$myport2 -d $ENV{EDGE_DB} -c "CREATE TABLE IF NOT EXISTS public.employee (
@@ -118,36 +108,31 @@ print("full_buf3 = @$full_buf3\n");
 print("stdout_buf3 = @$stdout_buf3\n");
 print("stderr_buf3 = @$stderr_buf3\n");
     
-     if(!(contains(@$stdout_buf3[0], "CREATE TABLE")))
+if(!(contains(@$stdout_buf3[0], "CREATE TABLE")))
 {
     exit(1);
 }
- 
-   print ("-"x50,"\n");    
+print ("-"x50,"\n");    
     
- #Adding table to repset on n2
-    my $cmd4 = qq($ENV{EDGE_CLUSTER_DIR}/n2/pgedge/$ENV{EDGE_CLI} spock repset-add-table default employee $ENV{EDGE_DB});
-    
-     print("cmd4 = $cmd4\n");
-     my($success4, $error_message4, $full_buf4, $stdout_buf4, $stderr_buf4)= IPC::Cmd::run(command => $cmd4, verbose => 0);
-     print("stdout_buf4 = @$stdout_buf4\n");
+#Adding table to repset on n2
+my $cmd4 = qq($ENV{EDGE_CLUSTER_DIR}/n2/pgedge/$ENV{EDGE_CLI} spock repset-add-table default employee $ENV{EDGE_DB});    
+print("cmd4 = $cmd4\n");
+my($success4, $error_message4, $full_buf4, $stdout_buf4, $stderr_buf4)= IPC::Cmd::run(command => $cmd4, verbose => 0);
+print("stdout_buf4 = @$stdout_buf4\n");
       
-     if(!(contains(@$stdout_buf4[0], "Adding table")))
+if(!(contains(@$stdout_buf4[0], "Adding table")))
 {
     exit(1);
+}   
+else 
+{
+    print ("Table employee is already added to default\n");
 }
-      
-else {
-   print ("Table employee is already added to default\n");
-    
-}
+print ("-"x50,"\n");
 
-print ("-"x50,"\n"); 
-  
-    
- # Inserting into public.$ENV{EDGE_TABLE} table
+# Inserting into public.$ENV{EDGE_TABLE} table
 
-   my $cmd5 = qq($homedir1/$ENV{EDGE_COMPONENT}/bin/psql -t -h $ENV{EDGE_HOST} -p $ENV{EDGE_START_PORT} -d $ENV{EDGE_DB} -c "INSERT INTO public.employee VALUES ('8', '738963773', 'Alice', 'Adams', '18 Austin Blvd', 'Austin, TX', 'US', '1983-01-06', 'mgmt', '2021-04-15'),
+my $cmd5 = qq($homedir1/$ENV{EDGE_COMPONENT}/bin/psql -t -h $ENV{EDGE_HOST} -p $ENV{EDGE_START_PORT} -d $ENV{EDGE_DB} -c "INSERT INTO public.employee VALUES ('8', '738963773', 'Alice', 'Adams', '18 Austin Blvd', 'Austin, TX', 'US', '1983-01-06', 'mgmt', '2021-04-15'),
 ('20', '08031375B89', 'Benson', 'Brown', 'Rosensweig 58', 'Berlin', 'DE', '1975-03-13', 'sales', '2023-02-18'),
 ('30', '839467228377', 'Charles', 'Clark', '4, Amrita Rd', 'Delhi', 'IN', '1963-07-18', 'sales', '2022-05-22'),
 ('40', '560389338', 'Douglas', 'Davis', '3758 Hampton Street', 'Seattle, WA', 'US', '1973-08-09', 'sales', '2020-08-12'),
@@ -157,69 +142,74 @@ print ("-"x50,"\n");
 ('80', '06030764H21', 'Helen', 'Harris', 'Dresden 3-9883', 'Munich', 'DE', '1964-03-07', 'sales', '2022-12-12'),
 ('90', '8874 7793 8299', 'Isaac', 'Ingram', '4758 Miller Lane', 'Wan Chai', 'HK', '1968-04-19', 'sales', '2020-06-01');");
 
-   #print("cmd2 = $cmd2\n");
-   my($success5, $error_message5, $full_buf5, $stdout_buf5, $stderr_buf5)= IPC::Cmd::run(command => $cmd5, verbose => 0);
-      print("stdout_buf5 = @$stdout_buf5\n");
-   if(!(contains(@$stdout_buf5[0], "INSERT")))
+#print("cmd5 = $cmd5\n");
+my($success5, $error_message5, $full_buf5, $stdout_buf5, $stderr_buf5)= IPC::Cmd::run(command => $cmd5, verbose => 0);
+print("stdout_buf5 = @$stdout_buf5\n");
+
+if(!(contains(@$stdout_buf5[0], "INSERT")))
 {
     exit(1);
+}   
+else 
+{   
+    print ("The INSERT statement succeeded (cmd5)\n");
 }
-   
 print("="x50,"\n");
 
 # Then, use the info to connect to psql and test for inserted data.
 
 my $cmd6 = qq($ENV{EDGE_CLUSTER_DIR}/n1/pgedge/$ENV{EDGE_COMPONENT}/bin/psql -t -h $ENV{EDGE_HOST} -p $ENV{EDGE_START_PORT} -d $ENV{EDGE_DB} -c "SELECT * FROM employee");
-
 #print("cmd6 = $cmd6\n");
 print("inserted Records in n1\n");
 my($success6, $error_message6, $full_buf6, $stdout_buf6, $stderr_buf6)= IPC::Cmd::run(command => $cmd6, verbose => 0);
-
 print("stdout_buf6 = @$stdout_buf6\n");
-
 print("-"x50,"\n");
 
 #check inserted data on n2
 my $cmd7 = qq($ENV{EDGE_CLUSTER_DIR}/n2/pgedge/$ENV{EDGE_COMPONENT}/bin/psql -t -h $ENV{EDGE_HOST} -p$myport2  -d $ENV{EDGE_DB} -c "SELECT * FROM employee");
 #print("cmd7 = $cmd7\n");
 print("Replicated Records in n2\n");
-
 my($success7, $error_message7, $full_buf7, $stdout_buf7, $stderr_buf7)= IPC::Cmd::run(command => $cmd7, verbose => 0);
-
 print("stdout_buf7 = @$stdout_buf7\n");
-
 print("-"x50,"\n");
 
 #DROP TABLE in n1
 
- my $cmd8 = qq($homedir1/$ENV{EDGE_COMPONENT}/bin/psql -t -h $ENV{EDGE_HOST} -p $ENV{EDGE_START_PORT} -d $ENV{EDGE_DB} -c "DROP TABLE employee cascade;");
+my $cmd8 = qq($homedir1/$ENV{EDGE_COMPONENT}/bin/psql -t -h $ENV{EDGE_HOST} -p $ENV{EDGE_START_PORT} -d $ENV{EDGE_DB} -c "DROP TABLE employee cascade;");
+print("cmd8 = $cmd8\n");    
+my($success8, $error_message8, $full_buf8, $stdout_buf8, $stderr_buf8)= IPC::Cmd::run(command => $cmd8, verbose => 0);
+print("stdout_buf8 = @$stdout_buf8\n");
     
-    print("cmd8 = $cmd8\n");
-    
-    my($success8, $error_message8, $full_buf8, $stdout_buf8, $stderr_buf8)= IPC::Cmd::run(command => $cmd8, verbose => 0);
-    print("stdout_buf8 = @$stdout_buf8\n");
-    
-
-   if(!(contains(@$stdout_buf8[0], "DROP TABLE")))
-{
-    exit(1);
- }
- 
- print("-"x50,"\n");
-
-#DROP TABLE in n2
-
- my $cmd9 = qq($homedir2/$ENV{EDGE_COMPONENT}/bin/psql -t -h $ENV{EDGE_HOST} -p$myport2 -d $ENV{EDGE_DB} -c "DROP TABLE employee cascade;");
-    
-    print("cmd9 = $cmd9\n");
-    
-    my($success9, $error_message9, $full_buf9, $stdout_buf9, $stderr_buf9)= IPC::Cmd::run(command => $cmd9, verbose => 0);
-    print("stdout_buf9 = @$stdout_buf9\n");
-     
-    
-    if(!(contains(@$stdout_buf9[0], "DROP TABLE")))
+if(!(contains(@$stdout_buf8[0], "DROP TABLE")))
 {
     exit(1);
 }
+print("-"x50,"\n");
+
+#DROP TABLE in n2
+
+my $cmd9 = qq($homedir2/$ENV{EDGE_COMPONENT}/bin/psql -t -h $ENV{EDGE_HOST} -p$myport2 -d $ENV{EDGE_DB} -c "DROP TABLE employee cascade;");
+print("cmd9 = $cmd9\n");
+my($success9, $error_message9, $full_buf9, $stdout_buf9, $stderr_buf9)= IPC::Cmd::run(command => $cmd9, verbose => 0);
+print("stdout_buf9 = @$stdout_buf9\n");
+
+if(!(contains(@$stdout_buf9[0], "DROP TABLE")))
+{
+    exit(1);
+}
+
+## Needle and Haystack - Note - this case was erroneously passing before.  I've updated the 'needle' to include the content 
+#  that should be returned when column filtering works, but the number of spaces in the NULL column may need to be adjusted 
+#  when the fix is in: 
+
+if(contains(@$stdout_buf7[0], "8 |             | Alice         | Adams       | 18 Austin Blvd              | Austin, TX   |                | US           |"))
+{
+    exit(0);
+}
+else
+{
+    exit(1);
+}
+
 
 
