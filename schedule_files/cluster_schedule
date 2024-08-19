@@ -4,7 +4,7 @@ t/cluster-create-json.py
 t/cluster-json-validate.py
 t/cluster-json-invalid-file.py
 t/cluster-init.py
-#t/get_info.py
+t/get_info.py
 t/cluster-remove-node.py
 t/cluster-add-node.py
 t/cluster-list-nodes.py
