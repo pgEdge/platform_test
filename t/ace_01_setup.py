@@ -66,6 +66,7 @@ for n in range(1,num_nodes+1):
     row = util_test.write_psql("GRANT ALL PRIVILEGES ON DATABASE alicesdb TO alice", host,dbname,port,pw,usr)
     row = util_test.write_psql("GRANT ALL PRIVILEGES ON SCHEMA public TO alice", host, "alicesdb", port, pw, usr)
     row = util_test.write_psql("CREATE TABLE foo(id serial primary key, data int);", host,"alicesdb",port,"password","alice")
+    row = util_test.write_psql("INSERT INTO foo values (10, 0);", host, "alicesdb", port, "password", "alice")
 
     # Creates database that Carol Owns
     cmd_node = f"psql -U {usr} -h /tmp -p {port} -d {dbname} -c \"create database carolsdb;\""

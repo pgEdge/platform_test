@@ -1,4 +1,4 @@
-import sys, os, psycopg, json, subprocess, shutil, re
+import sys, os, psycopg, json, subprocess, shutil, re, csv
 from dotenv import load_dotenv
 
 def EXIT_PASS():
@@ -257,13 +257,13 @@ def write_nofail_psql(cmd,host,dbname,port,pw,usr):
     return ret
 
 ## Read psql
-def read_psql(cmd,host,dbname,port,pw,usr):
+def read_psql(cmd,host,dbname,port,pw,usr,indent=None):
     con = get_pg_con(host,dbname,port,pw,usr)
     try:
         cur = con.cursor()
         cur.execute(cmd)
         print(cmd)
-        ret = json.dumps(cur.fetchall())
+        ret = json.dumps(cur.fetchall(), indent=indent)
         cur.close()
     except Exception as e:
         exit_message(e)
@@ -342,22 +342,37 @@ def needle_in_haystack(haystack, needle):
 
 
 # *****************************************************************************
-## Function to grab diff file and data from stdout
+## Function to grab diff file and data from stdout (might be inconsistant with csvs)
 # *****************************************************************************
 
-def get_diff_data(stdout: str) -> tuple[str, dict]:
-    # current pattern expects `diffs/YYYY-MM-DD_hh:mm:ss/diff.json`
-    file_pattern = r'diffs/\d{4}-\d{2}-\d{2}_\d{2}:\d{2}:\d{2}/diff\.json'
+def get_diff_data(stdout: str, type = "json") -> tuple[str, dict]:
+    if type not in ["json", "csv"]:
+        raise Exception(f"Type should be json or csv, not {type}")
+
+    # current pattern expects `diffs/YYYY-MM-DD/diffs_TIMESTAMP.json`
+    if type == "json":
+        file_pattern = r'diffs/\d{4}-\d{2}-\d{2}/diffs_\d+.json'
+    if type == "csv":
+        file_pattern = r'diffs/\d{4}-\d{2}-\d{2}/n1_n2_\d+.diff'
     match = re.search(file_pattern, stdout)
 
     if match:
         diff_file_local = match.group(0)
         diff_file_path = os.path.join(os.getenv("EDGE_HOME_DIR"), diff_file_local)
     else:
-        exit_message(f"Fail - {os.path.basename(__file__)} - Couldn't find diff file", 1)
+        raise Exception("Couldn't find diff file")
 
-    diff_file = open(diff_file_path, "r")
-    diff_data = json.load(diff_file)
+    if type == "json":
+        with open(diff_file_path, "r") as diff_file:
+            diff_data = json.load(diff_file)
+
+    if type == "csv":
+        diff_data = list()
+        for line in open(diff_file_path, "r"):
+            if line[0] == '+' or line[0] == '-':
+                items = line[1:].strip().split(',')
+                if items: diff_data.append(items)
+
     return diff_file_local, diff_data
 
 
@@ -365,7 +380,7 @@ def get_diff_data(stdout: str) -> tuple[str, dict]:
 ## Compares data in dicts, allows lists to be out of order
 # *****************************************************************************
 
-def compare_structures(struct1, struct2) -> bool:
+def compare_structures(struct1, struct2, verbose = False) -> bool:
     if isinstance(struct1, dict) and isinstance(struct2, dict):
         if set(struct1.keys()) != set(struct2.keys()):
             return False
@@ -380,8 +395,12 @@ def compare_structures(struct1, struct2) -> bool:
         return all(compare_structures(item1, item2) for item1, item2 in zip(sorted_struct1, sorted_struct2))
 
     else:
-        return struct1 == struct2
-    
+        struct1, struct2 = str(struct1), str(struct2)
+        if struct1 == struct2: return True
+        else:
+            if verbose: print(f"Difference found in structure: {struct1} != {struct2}")
+            return False
+
 # *****************************************************************************
 ## Prints the result from a command run in a nicer format since its driving me crazy
 # *****************************************************************************
