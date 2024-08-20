@@ -1,5 +1,5 @@
 -- Validate replicated functions, procedures, tables
--- No objects sould exist except tab7
+-- No objects sould exist except tab7, schemas (alice,wonderland)
 \df add_column*
 \df remove_column*
 \df employee_insert_trigger
@@ -13,6 +13,8 @@
 \d tab_emp
 \dn john
 \dn alice
+\dn cena
+\dn wonderland
 
 -- Turn off the allow_ddl_from_functions GUC so that these drops are not auto replicated
 ALTER SYSTEM SET spock.allow_ddl_from_functions = off;
@@ -25,6 +27,7 @@ DO $$
 BEGIN
   EXECUTE 'DROP TABLE tab7_anon_off';
   EXECUTE 'DROP SCHEMA alice';
+  EXECUTE 'DROP SCHEMA wonderland';
 END
 $$;
 
