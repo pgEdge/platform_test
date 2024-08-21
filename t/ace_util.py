@@ -13,7 +13,7 @@ cluster = os.getenv("EDGE_CLUSTER")
 
 # STRING CONSTS
 DIFF_MATCH    = "TABLES MATCH OK"
-DIFF_COUNT    = "FOUND {number} DIFFERENCES"
+DIFF_COUNT    = "FOUND {number} DIFFS"
 DIFF_MISMATCH = "TABLES DO NOT MATCH"
 REP_SUCCESS   = "Successfully applied diffs to public.{table_name}"
 
