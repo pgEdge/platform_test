@@ -1,7 +1,11 @@
 import sys, os, util_test, subprocess
+
+import psycopg.sql
 import random, string, json, time, psycopg
 from datetime import datetime, timedelta
 from uuid import uuid4
+
+from ace_util import diff_assert_mismatch, rerun_assert_match, repair_assert_works
 
 ## Get Test Settings
 util_test.set_env()
@@ -277,7 +281,7 @@ def remove_table(table_name: str) -> None:
 
 def mod_and_repair(
         column: tuple[str, str], table_name: str,
-        cluster = os.getenv("EDGE_CLUSTER"), home_dir = os.getenv("NC_DIR"),
+        cluster = os.getenv("EDGE_CLUSTER"), pg_dir = os.getenv("EDGE_HOME_DIR"),
         action = "update", where = "mod(id, 3) = 0",
         set: str = None, verbose = False, grabDiffs = False
     ) -> tuple[int, str]:
@@ -319,54 +323,23 @@ Running mod_and_repair with options:
 
     # Use table diff to find differences and save diff file info
     start = time.time()
-    cmd_node = f"ace table-diff {cluster} public.{table_name}"
-    res=util_test.run_cmd("Matching Tables", cmd_node, f"{home_dir}")
-    if verbose:
-        util_test.printres(res)
-        print("*" * 100)
-    
-    try:
-        diff_file, diff_data = util_test.get_diff_data(res.stdout)
+    found_diff, diff_file = diff_assert_mismatch(table_name, quiet=not verbose, get_diff=True)
+    if grabDiffs:
+        with open( os.path.join( pg_dir, diff_file ) ) as file: write_diff("MaR_run1", json.load(file))
 
-        if grabDiffs:
-            write_diff("MaR_run1", diff_data)
-
-    except Exception:
-        pass
-
-    if res.returncode == 1 or "TABLES DO NOT MATCH" not in res.stdout:
+    if not found_diff:
         return 1, "Couldn't find difference in tables"
     diff_time = time.time() - start
 
     # Use table repair with n1 as the source of truth
     start = time.time()
-    cmd_node = f"ace table-repair {cluster} {diff_file} n1 public.{table_name}"
-    res=util_test.run_cmd("table-repair", cmd_node, f"{home_dir}")
-    if verbose:
-        util_test.printres(res)
-        print("*" * 100)
-    if res.returncode == 1 or f"Successfully applied diffs to public.{table_name} in cluster {cluster}" not in res.stdout:
+    if not repair_assert_works(table_name, diff_file, "n1", quiet=not verbose):
         return 1, "Couldn't repair differences in tables"
     repair_time = time.time()-start
 
     # Run with now matching info
     start = time.time()
-    cmd_node = f"ace table-rerun {cluster} {diff_file} public.{table_name}"
-    res=util_test.run_cmd("table-rerun", cmd_node, f"{home_dir}")
-    if verbose:
-        util_test.printres(res)
-        print("*" * 100)
-    
-    try:
-        diff_file, diff_data = util_test.get_diff_data(res.stdout)
-
-        if grabDiffs:
-            write_diff("MaR_run2", diff_data)
-
-    except Exception:
-        pass
-
-    if res.returncode == 1 or "TABLES MATCH OK" not in res.stdout:
+    if not rerun_assert_match(table_name, diff_file, quiet=not verbose):
         return 1, "Differences in tables not fixed"
     rerun_time = time.time() - start
 

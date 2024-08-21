@@ -1,6 +1,9 @@
 import sys, os, util_test, subprocess
 import time
 
+from ace_util import rerun_assert_match, rerun_assert_mismatch, diff_assert_mismatch
+from json import load
+
 ## Print Script
 print(f"Starting - {os.path.basename(__file__)}")
 
@@ -17,13 +20,15 @@ pw=os.getenv("EDGE_PASSWORD","password")
 host=os.getenv("EDGE_HOST","localhost")
 dbname=os.getenv("EDGE_DB","lcdb")
 num_nodes=int(os.getenv("EDGE_NODES",2))
+pgdir=os.getenv("EDGE_HOME_DIR")
 
-## Basic Functionality Tests for `ace spock-table-rerun`
+## Basic Functionality Tests for `ace table-rerun`
 
 # First Call Table Diff to get a Diff File
-cmd_node = f"ace table-diff {cluster} public.foo_diff_data"
-res=util_test.run_cmd("table-diff", cmd_node, f"{home_dir}")
-diff_file_local, diff_data = util_test.get_diff_data(res.stdout)
+found_mismatch, diff_file_local = diff_assert_mismatch("foo_diff_data", get_diff=True, quiet=True)
+if not found_mismatch:
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Non-Matching Diff")
+
 
 # print(json.dumps(diff_data, indent=2))
 # {
@@ -55,60 +60,40 @@ diff_file_local, diff_data = util_test.get_diff_data(res.stdout)
 #   }
 # }
 
-# Ensures that diff file names don't match
-time.sleep(1)
-
 # First run on non-matching info
-cmd_node = f"ace table-rerun {cluster} {diff_file_local} public.foo_diff_data"
-res=util_test.run_cmd("table-rerun", cmd_node, f"{home_dir}")
-diff_file_local_2, diff_data_2 = util_test.get_diff_data(res.stdout)
-util_test.printres(res)
-if res.returncode == 1 or "FOUND DIFFS BETWEEN NODES" not in res.stdout:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Non-Matching Rerun", 1)
-print("*" * 100)
+found_mismatch, diff_file_local_2 = rerun_assert_mismatch("foo_diff_data", diff_file_local, get_diff=True)
+if not found_mismatch:
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Non-Matching Rerun")
 
-if not util_test.compare_structures(diff_data, diff_data_2):
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Rerun didn't return same structure as table-diff", 1)
+with open(os.path.join(pgdir, diff_file_local), "r") as file1, open(os.path.join(pgdir, diff_file_local_2), "r") as file2:
+    if not util_test.compare_structures(load(file1), load(file2)):
+        util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Rerun didn't return same structure as table-diff")
 
 # Make files match by changing the information in the second one
 if not util_test.write_psql("UPDATE foo_diff_data SET employeename = 'Carol', employeemail = 'carol@pgedge.com' WHERE employeeid = 1",host,dbname,port+1,pw,usr) == 0:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Could not edit tables", 1)
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Could not edit tables")
 if not util_test.write_psql("UPDATE foo_diff_data SET employeename = 'Bob', employeemail = 'bob@pgedge.com' WHERE employeeid = 2",host,dbname,port+1,pw,usr) == 0:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Could not edit tables", 1)
-
-# Ensures that diff file names don't match
-time.sleep(1)
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Could not edit tables")
 
 # Run with now matching info
-cmd_node = f"ace table-rerun {cluster} {diff_file_local} public.foo_diff_data"
-res=util_test.run_cmd("table-rerun", cmd_node, f"{home_dir}")
-util_test.printres(res)
-if res.returncode == 1 or "TABLES MATCH OK" not in res.stdout:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Matching Rerun by Update", 1)
-print("*" * 100)
+if not rerun_assert_match("foo_diff_data", diff_file_local):
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Matching Rerun by Update")
 
 # Drop one of the rows from both tables
 for n in range(1,num_nodes+1):
     if not util_test.write_psql("DELETE FROM foo_diff_data WHERE employeeid = 2",host,dbname,port+n-1,pw,usr) == 0:
-        util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Could not delete from tables", 1)
-
-# Ensures that diff file names don't match
-time.sleep(1)
+        util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Could not delete from tables")
 
 # Run with dropped row
-cmd_node = f"ace table-rerun {cluster} {diff_file_local} public.foo_diff_data"
-res=util_test.run_cmd("table-rerun", cmd_node, f"{home_dir}")
-util_test.printres(res)
-if res.returncode == 1 or "TABLES MATCH OK" not in res.stdout:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Matching Rerun by Delete", 1)
-print("*" * 100)
+if not rerun_assert_match("foo_diff_data", diff_file_local):
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Matching Rerun by Delete")
 
 # Recreate old environment for future tests
 if not util_test.write_psql("INSERT INTO foo_diff_data values(2, 'Bob', 'bob@pgedge.com')",host,dbname,port,pw,usr) == 0:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Could not insert into tables", 1)
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Could not insert into tables")
 if not util_test.write_psql("UPDATE foo_diff_data SET employeename = 'Alice', employeemail = 'alice@pgedge.com' WHERE employeeid = 1",host,dbname,port+1,pw,usr) == 0:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Could not edit tables", 1)
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Could not edit tables")
 if not util_test.write_psql("INSERT INTO foo_diff_data values(2, 'Carol', 'carol@pgedge.com')",host,dbname,port+1,pw,usr) == 0:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Could not insert into tables", 1)
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Could not insert into tables")
 
 util_test.exit_message(f"Pass - {os.path.basename(__file__)}", 0)
