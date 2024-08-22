@@ -1,4 +1,5 @@
 import sys, os, util_test, subprocess
+import psycopg
 
 ## Print Script
 print(f"Starting - {os.path.basename(__file__)}")
@@ -57,23 +58,30 @@ for n in range(1,num_nodes+1):
     row = util_test.write_psql("CREATE USER alice WITH PASSWORD 'password'", host,dbname,port,pw,usr)
     row = util_test.write_psql("CREATE USER carol WITH PASSWORD 'password'", host,dbname,port,pw,usr)
 
-    # Creates database that Alice Owns
-    cmd_node = f"psql -U {usr} -h /tmp -p {port} -d {dbname} -c \"create database alicesdb;\""
-    res=subprocess.run(cmd_node, shell=True, capture_output=True, text=True)
-    util_test.printres(res)
-    if res.returncode == 1:
-        util_test.exit_message("Couldn't create database")
+
+    def create_database(conn: psycopg.Connection, db_name: str):
+        cur = conn.cursor()
+        try:
+            cur.execute(f"CREATE DATABASE {db_name};")
+            conn.commit()
+            print(f"Created database {db_name}")
+        except Exception as e:
+            conn.rollback()
+            util_test.exit_message(f"Error creating database: {e}")
+        finally:
+            cur.close()
+
+    with psycopg.connect(dbname=dbname, user=usr, host=host, port=port, password=pw, autocommit=True) as conn:
+        create_database(conn, "alicesdb")
+        create_database(conn, "carolsdb")
+
+
     row = util_test.write_psql("GRANT ALL PRIVILEGES ON DATABASE alicesdb TO alice", host,dbname,port,pw,usr)
     row = util_test.write_psql("GRANT ALL PRIVILEGES ON SCHEMA public TO alice", host, "alicesdb", port, pw, usr)
     row = util_test.write_psql("CREATE TABLE foo(id serial primary key, data int);", host,"alicesdb",port,"password","alice")
     row = util_test.write_psql("INSERT INTO foo values (10, 0);", host, "alicesdb", port, "password", "alice")
 
-    # Creates database that Carol Owns
-    cmd_node = f"psql -U {usr} -h /tmp -p {port} -d {dbname} -c \"create database carolsdb;\""
-    res=subprocess.run(cmd_node, shell=True, capture_output=True, text=True)
-    util_test.printres(res)
-    if res.returncode == 1:
-        util_test.exit_message("Couldn't create database")
+    
     row = util_test.write_psql("GRANT ALL PRIVILEGES ON DATABASE carolsdb TO carol", host,dbname,port,pw,usr)
     row = util_test.write_psql("GRANT ALL PRIVILEGES ON SCHEMA public TO carol", host, "carolsdb", port, pw, usr)
     row = util_test.write_psql("CREATE TABLE foo(id serial primary key, data int);", host,"carolsdb",port,"password","carol")

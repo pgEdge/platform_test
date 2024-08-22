@@ -8,6 +8,7 @@ import spock_1_setup
 import spock_2_node_create
 import spock_3_sub_create
 import spock_4_repset_add_table
+import spock_99_cleanup
 
 ## Print Script
 print(f"Starting - {os.path.basename(__file__)}")
@@ -17,6 +18,10 @@ util_test.set_env()
 
 home_dir = os.getenv("NC_DIR")
 cluster = os.getenv("EDGE_CLUSTER")
+
+tries = 0
+fails = 0
+fail_info = list()
 
 # This file exists to test table-rerun as a way to notice that network delay has caused
 # table-diff to report errors where there are none. The steps for this are as follows
@@ -38,12 +43,14 @@ form = [
 generate_table(table_name, form, 10000)
 
 # Assert that this is replicated throughout
+tries += 1
 if not diff_assert_match(table_name):
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Matching Tables")
+    fails += 1
+    fail_info.append(f"Fail - {os.path.basename(__file__)} - Matching Tables")
 
 
 # Step 1:
-os.environ["SPOCK_DELAY"] = "25"
+os.environ["SPOCK_DELAY"] = "30"
 spock_1_setup.run()
 spock_2_node_create.run()
 spock_3_sub_create.run()
@@ -52,48 +59,72 @@ spock_4_repset_add_table.run()
 
 # Step 2:
 start = time.time()
-print(time.time())
-insert_into("t1", form, 10, nodes=[1])
-time.sleep(5.0 + start - time.time())
-
-
-# Step 3:
-print(time.time())
-insert_into("t1", form, 10, nodes=[1])
+print(f"---- starting: {time.time()} = 0")
+insert_into(table_name, form, 10, nodes=[1])
 time.sleep(10.0 + start - time.time())
 
 
+# Step 3:
+print(f"---- Step 3: {time.time() - start}")
+insert_into(table_name, form, 10, nodes=[1])
+# time.sleep(10.0 + start - time.time())
+
+
 # Step 4:
-print(time.time())
+print(f"---- Step 4: {time.time() - start}")
 found_mismatch, diff_file = diff_assert_mismatch(table_name, get_diff=True)
+tries += 1
 if not found_mismatch:
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - 20 Diffs")
+    fails += 1
+    fail_info.append(f"Fail - {os.path.basename(__file__)} - 20 Diffs")
 
 
 # Step 5:
-print(time.time())
+print(f"---- Step 5 :{time.time() - start}")
+tries += 1
 if not rerun_assert_diff_count(table_name, diff_file, 20):
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Non-Matching Rerun")
-time.sleep(16.0 + start - time.time())
+    fails += 1
+    fail_info.append(f"Fail - {os.path.basename(__file__)} - Non-Matching Rerun (20)")
+# time.sleep(25.0 + start - time.time())
 
 
 # Step 6:
-print(time.time())
-if not rerun_assert_diff_count(table_name, diff_file, 10):
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Non-Matching Rerun")
-time.sleep(21.0 + start - time.time())
+print(f"---- Step 6 :{time.time() - start}")
+tries += 1
+while not rerun_assert_diff_count(table_name, diff_file, 10):
+    print(f"---- NOTE: still 20 diffs at {time.time() - start}")
+    if time.time() - start > 50.0:
+        fails += 1
+        fail_info.append(f"Fail - {os.path.basename(__file__)} - Non-Matching Rerun (10)")
+        break
+if not fail_info: print(f"---- NOTE: down to 10 diffs")
+# time.sleep(35.0 + start - time.time())
 
 
 # Step 7:
-print(time.time())
-if not rerun_assert_match(table_name, diff_file):
-    util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Matching Rerun")
+print(f"---- Step 7 :{time.time() - start}")
+tries += 1
+while not rerun_assert_match(table_name, diff_file):
+    print(f"---- NOTE: still 10 diffs at {time.time() - start}")
+    if time.time() - start > 70.0:
+        fails += 1
+        fail_info.append(f"Fail - {os.path.basename(__file__)} - Matching Rerun")
+        break
+
+if not fail_info: print(f"---- NOTE: tables match at {time.time() - start}")
 
 
 # Cleanup
-remove_table("t1")
 os.environ.pop("SPOCK_DELAY")
-import spock_99_cleanup
+spock_99_cleanup.run()
+remove_table(table_name)
+
+
+if fail_info:
+    print(f"Failed {fails} out of {tries} cases")
+    for fail in fail_info:
+        print(f"\t{fail}")
+    util_test.exit_message(f"Fail - {os.path.basename(__file__)}")
 
 
 util_test.exit_message(f"Pass - {os.path.basename(__file__)}", 0)
