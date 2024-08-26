@@ -23,7 +23,7 @@ spockpinver=("EDGE_SPOCK_PINNED_VER","3.3.6")
 dbname=os.getenv("EDGE_DB","lcdb")
 
 cwd=os.getcwd()
-
+nc="nc"
 ## Set the number of nodes and spock version here to override the config.env variables:
 num_nodes=3 
 spockversion="3.3.6"

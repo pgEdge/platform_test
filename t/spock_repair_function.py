@@ -17,6 +17,7 @@ host=os.getenv("EDGE_HOST","localhost")
 repuser=os.getenv("EDGE_REPUSER","pgedge")
 repset=os.getenv("EDGE_REPSET","demo-repset")
 spockpath=os.getenv("EDGE_SPOCK_PATH")
+spockver=os.getenv("EDGE_SPOCK_DEFAULT_VER","3.3.6")
 dbname=os.getenv("EDGE_DB","lcdb")
 
 port2=port1+1
