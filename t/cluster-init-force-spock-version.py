@@ -64,7 +64,7 @@ print("*"*100)
 # Needle and Haystack
 # Confirm the command worked by looking for:
 
-if "\nSyntaxError" not in str(init.stdout) or init.returncode == 1:
+if "[FAILED]" not in str(init.stdout) or init.returncode == 1:
 
     util_test.EXIT_PASS()
 else:
