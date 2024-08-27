@@ -1,6 +1,6 @@
 t/setup_01_install.py
-t/setup_02_nodecreate.py
-t/setup_03_noderun.py
+t/setup_03_node_install.py
+t/setup_04_node_setup.py
 t/cluster_1_gen_json.py
 
 t/ace_01_setup.py
@@ -19,5 +19,5 @@ t/ace_60_table_repair.py
 t/ace_61_table_repair_errors.py
 t/ace_99_cleanup.py
 
-t/cleanup_01_noderemove.py
-t/cleanup_02_pgremove.py
+t/cleanup_01_node_remove.py
+t/cleanup_03_remove_nc.py
