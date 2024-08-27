@@ -50,64 +50,93 @@ row = util_test.read_psql("SELECT * FROM pgbench_branches",host,dbname,port2,pw,
 print(f"The n2 check returns: {row}")
 print("*"*100)
 
+## Add one row that should be replicated from n1 to n2:
+
+row = util_test.write_psql("INSERT INTO pgbench_branches VALUES(11, 11000, null)",host,dbname,port1,pw,usr)
+print(f"We inserted bid 11 on n1: {row}")
+print("*"*100)
+
+## Look for our rows on n1 and n2:
+
+row1 = util_test.read_psql("SELECT * FROM pgbench_branches",host,dbname,port1,pw,usr)
+print(f"Node n1 should contain bid 1/11: {row1}")
+
+row2 = util_test.read_psql("SELECT * FROM pgbench_branches",host,dbname,port2,pw,usr)
+print(f"Node n2 should contain bid 1/11: {row2}")
+
+print("*"*100)
+
 ## Create an anonymous block that puts the cluster in repair mode and does an insert statement that will
-## add a row to n1 that will not be replicated to n2 
+## add a row to n2 that will not be replicated to n1:
 
 anon_block = """
 DO $$
 BEGIN
     PERFORM spock.repair_mode('True');
-    INSERT INTO pgbench_branches VALUES (2, 70000, null);
+    INSERT INTO pgbench_branches VALUES (22, 22000, null);
 END $$;
 """
 
 print(anon_block)
-
-row = util_test.write_psql(f"{anon_block}",host,dbname,port1,pw,usr)
+row = util_test.write_psql(f"{anon_block}",host,dbname,port2,pw,usr)
 print(row)
 
-## Look for our row on n1 and n2:
+## Check the rows on n1 and n2:
 
 row1 = util_test.read_psql("SELECT * FROM pgbench_branches",host,dbname,port1,pw,usr)
-print(row1)
+print(f"We're in repair mode - n1 now contains 1/11: {row1}")
 
 row2 = util_test.read_psql("SELECT * FROM pgbench_branches",host,dbname,port2,pw,usr)
-print(row2)
+print(f"We're in repair mode - n2 now contains 1/11/22: {row2}")
 
 print("*"*100)
 
-## Update the record that is out of sync, forcing a record into the exception table...
-row = util_test.write_psql("UPDATE pgbench_branches SET filler = 'hi' WHERE bid = 2",host,dbname,port1,pw,usr)
-print(f"The update to bid 2 returns: {row}")
+## Add a row to n1 that has the same bid as the row we added on n2; we're still in repair mode:
+
+row = util_test.write_psql("INSERT INTO pgbench_branches VALUES(22, 99000, null)",host,dbname,port1,pw,usr)
+print(f"We just tried to insert bid 22 on n1 - this should fail, but it doesn't: {row}")
 print("*"*100)
 
-## Read from the spock.exception_log;
-row = util_test.read_psql("SELECT * FROM spock.exception_log",host,dbname,port2,pw,usr).strip("[]")
-print(f"SELECT * FROM spock.exception_log returns: {row}")
+## Look for our rows on n1 and n2:
+
+row1 = util_test.read_psql("SELECT * FROM pgbench_branches",host,dbname,port1,pw,usr)
+print(f"Node n1 should contain bid 1/11: {row1}")
+
+row2 = util_test.read_psql("SELECT * FROM pgbench_branches",host,dbname,port2,pw,usr)
+print(f"Node n2 should contain bid 1/11/22: {row2}")
+
+
+## Check the results from the statement above, and you can see the duplicate primary key error 
+## is not being caught. Fix this when the patch is in.
+
+
+## Read from the spock.exception_log on n1;
+row = util_test.read_psql("SELECT remote_new_tup FROM spock.exception_log",host,dbname,port1,pw,usr).strip("[]")
+print(f"SELECT remote_new_tup FROM spock.exception_log on n1 returns an empty result set: {row}")
 print("*"*100)
 
-## Demonstrate that replication continues on n1
-row = util_test.write_psql("UPDATE pgbench_branches SET filler = 'bye' WHERE bid = 1",host,dbname,port1,pw,usr)
-print(f"The update to bid 1 on n1 returns: {row}")
+## Read from the spock.exception_log on n2;
+row = util_test.read_psql("SELECT remote_new_tup FROM spock.exception_log",host,dbname,port2,pw,usr).strip("[]")
+print(f"SELECT remote_new_tup FROM spock.exception_log on n2 returns the replication error: {row}")
 print("*"*100)
 
-## Show that the row update made it to n1 without causing a death spiral:
+## Show that the row update hasn't caused a death spiral:
 row = util_test.read_psql("SELECT * FROM pgbench_branches",host,dbname,port1,pw,usr).strip("[]")
-print(f"On n1, pgbench branches contains: {row}")
+print(f" n1 pgbench branches contains: {row}")
 print("*"*100)
 
-## Show that the row update made it to n2 without a death spiral:
+## Show that the row update hasn't caused a death spiral:
 row = util_test.read_psql("SELECT * FROM pgbench_branches",host,dbname,port2,pw,usr).strip("[]")
-print(f"On n2, pgbench branches contains: {row}")
+print(f" n2 pgbench branches contains: {row}")
 print("*"*100)
 
-## Read from the spock.exception_log;
+## Read from the spock.exception_log on n2 for our needle/haystack step:
 row = util_test.read_psql("SELECT remote_new_tup FROM spock.exception_log",host,dbname,port2,pw,usr)
-print(f"SELECT * FROM spock.exception_log returns: {row}")
+print(f"SELECT remote_new_tup FROM spock.exception_log on n2 returns: {row}")
 print("*"*100)
 
 
-if '"value": 2, "attname": "bid", "atttype": "int4"' in str(row):
+if '"value": 22, "attname": "bid", "atttype": "int4"' in str(row):
     
     util_test.EXIT_PASS()
 else:
