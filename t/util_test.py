@@ -1,5 +1,7 @@
 import sys, os, psycopg, json, subprocess, shutil, re, csv
 from dotenv import load_dotenv
+from psycopg import sql
+
 
 def EXIT_PASS():
     print("pass")
@@ -22,6 +24,57 @@ def exit_message(p_msg, p_rc=1):
        print(f"ERROR {p_msg}")
     sys.exit(p_rc)
  
+
+# **************************************************************************************************************
+## Enable AutoDDL
+# **************************************************************************************************************
+# To call this function, pass a connection string:
+#     command = util_test.enable_autoddl(host, dbname, port, pw, usr)
+
+## Get a connection - this connection sets autocommit to True and returns authentication error information
+
+def get_autoddl_conn(host,dbname,port,pw,usr):
+    try:
+        conn = psycopg.connect(dbname=dbname, user=usr, host=host, port=port, password=pw)
+        conn.autocommit = True
+        print("Your connection is established, with autocommit = True")
+        return conn
+
+    except Exception as e:
+        conn = None
+        print("The connection attempt failed")
+    return(con1)
+
+##############################
+
+def enable_autoddl(host, dbname, port, pw, usr):
+    try:   
+        # Connect to the PostgreSQL database
+
+        conn = get_autoddl_conn(host,dbname,port,pw,usr)
+        cur = conn.cursor()
+        # We'll execute the following commands:
+        
+        cur.execute("ALTER SYSTEM SET spock.enable_ddl_replication = on")
+        cur.execute("ALTER SYSTEM SET spock.include_ddl_repset = on")
+        cur.execute("ALTER SYSTEM SET spock.allow_ddl_from_functions = on")
+	
+        # Then, reload the PostgreSQL configuration:
+        cur.execute("SELECT pg_reload_conf()")
+        print("PostgreSQL configuration reloaded.")
+
+        # Close the cursor and connection
+        cur.close()
+        conn.close()
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
+
+
+
+
 
 # ************************************************************************************************************** 
 ## Run a pgEdge command

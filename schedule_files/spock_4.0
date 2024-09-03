@@ -5,10 +5,11 @@ t/cluster-init.py
 
 ## Spock repair mode functionality
 t/spock_repair_function.py
-t/spock_exception_table_case99.py
+#t/spock_exception_table_case99.py
 t/spock_exception_table_case1.py
 t/spock_exception_table_case2.py
 t/spock_exception_table_case3.py
+t/spock_exception_table_case4.py
 
 ## Clean up scenario
 t/8998_env_remove_pgedge_node1.pl
