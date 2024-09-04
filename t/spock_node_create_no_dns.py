@@ -20,17 +20,6 @@ repset=os.getenv("EDGE_REPSET","demo-repset")
 spockpath=os.getenv("EDGE_SPOCK_PATH")
 dbname=os.getenv("EDGE_DB","lcdb")
 #
-# Check for "n1", and drop it if it exists; then we'll use spock node-create to create errors. This way we can play the tests out of order.
-# 
-check_value = util_test.read_psql("select * from spock.node;",host,dbname,port,pw,usr).strip("[]")
-print(f"Check value is: {check_value}")
-
-if "n1" in str(check_value):
-    drop_node = f"spock node-drop n1 {dbname}"
-    drop=util_test.run_cmd("Run spock node-drop.", drop_node, f"{cluster_dir}/n1")
-    print(f"Print drop.stdout here: - {drop.stdout}")
-print("*"*100)
-
 # Invoke spock node-create, but don't specify a node name:
 
 command = f"spock node-create n1 {dbname}"
