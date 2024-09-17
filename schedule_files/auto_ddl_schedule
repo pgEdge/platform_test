@@ -8,13 +8,11 @@ t/setup_04_node_setup.py
 ##
 # node creation
 ##
-t/8051_env_create_node1.pl
-t/8052_env_create_node2.pl
+t/spock_2_node_create.py
 ##
 # sub-create
 ##
-t/6000_setup_sub_create_n1n2_n1.pl
-t/6001_setup_sub_create_n2n1_n2.pl
+t/spock_3_sub_create.py
 ##
 # enable autoDDL GUCS
 ##
@@ -55,10 +53,7 @@ t/auto_ddl/6666c_all_objects_validate_n1.sql
 ##
 t/6910_teardown_autoddl_gucs_off_n1.pl
 t/6911_teardown_autoddl_gucs_off_n2.pl
-t/8082_env_sub_drop_n1.pl
-t/8083_env_sub_drop_n2.pl
-t/8086_env_node_drop_n1.pl
-t/8087_env_node_drop_n2.pl
+t/spock_6_drop.py
 
 ##
 # uninstall pgedge

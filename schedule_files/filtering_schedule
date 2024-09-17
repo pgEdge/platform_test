@@ -5,11 +5,8 @@ t/setup_01_install.py
 ## Setup scripts for lower level directory
 t/setup_03_node_install.py
 t/setup_04_node_setup.py
-##
-t/8051_env_create_node1.pl
-t/8052_env_create_node2.pl
-t/6000_setup_sub_create_n1n2_n1.pl 
-t/6001_setup_sub_create_n2n1_n2.pl 
+t/spock_2_node_create.py
+t/spock_3_sub_create.py
 
 
 #Filtering scripts

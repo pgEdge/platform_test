@@ -5,8 +5,7 @@ t/setup_03_node_install.py
 t/setup_04_node_setup.py
 
 ## Setup scripts for lower level directory
-t/8051_env_create_node1.pl
-t/8052_env_create_node2.pl
+t/spock_2_node_create.py
 
 ## Spock 4.0 Scripts
 t/spock_repair_function.py

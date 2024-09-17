@@ -29,7 +29,7 @@ for n in range(1,numnodes+1):
     modules = {
         pgname: False,
         f"snowflake-{pgname}": False,
-        f"spock33-{pgname}": False
+        f"spock": False
     }
 
     cmd_node = f"um list"

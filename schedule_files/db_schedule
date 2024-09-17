@@ -3,8 +3,7 @@
 t/setup_01_install.py
 t/setup_03_node_install.py
 t/setup_04_node_setup.py
-t/8051_env_create_node1.pl
-t/8052_env_create_node2.pl
+t/spock_2_node_create.py
 
 t/db-guc-show.py
 t/db-guc-show-no-guc.py

@@ -26,7 +26,7 @@ if res.returncode != 0:
 modules = {
     pgname: False,
     f"snowflake-{pgname}": False,
-    f"spock33-{pgname}": False
+    f"spock": False
 }
 
 cmd_node = f"um list"
