@@ -39,7 +39,7 @@ if "already installed" in res.stdout:
 modules = {
     pgname: False,
     f"snowflake-{pgname}": False,
-    f"spock33-{pgname}": False
+    f"spock": False
 }
 
 cmd_node = f"./{clicommand} um list"
@@ -50,6 +50,11 @@ for line in res.stdout.strip().split("\\n"):
     for key in modules.keys():
         if key in line and "Installed" in line:
             modules[key] = True
+            if key == "spock" and spockver:
+                if spockver in line:
+                    print(f"Correct spock ver {spockver} is installed")
+                else:
+                    util_test.exit_message(f"Faild, wrong spock ver {spockver} installed")
     
 for key in modules.keys():
     if modules[key]:
