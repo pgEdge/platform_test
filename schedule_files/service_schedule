@@ -1,6 +1,6 @@
 ## Set up a two node cluster
-t/020_nodectl_install_pgedge.pl
-t/300_setup_script.pl
+t/setup_01_install.py
+t/setup_02_setup.py
 
 ## Test Service Module
 t/service_reload_component.pl
@@ -14,5 +14,5 @@ t/service_enable_error.pl
 
 t/399_um_breakdown_script.pl
 
-# 9998X.py to deletes the nc and pgpass directory, etc.
-t/9998_remove_nc_and_pgpass_dirs.py
+t/cleanup_02_remove.py
+t/cleanup_03_remove_nc.py
