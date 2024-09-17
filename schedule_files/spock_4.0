@@ -4,7 +4,7 @@ t/setup_01_install.py
 t/cluster-init.py
 
 ## Setup scripts for lower level directory
-t/spock_2_node_create.py
+#t/spock_2_node_create.py
 
 ## Spock 4.0 Scripts
 t/spock_repair_function.py
