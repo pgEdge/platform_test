@@ -1,14 +1,18 @@
 
-## Set up a two node cluster
+## Spock repair mode functionality
 t/setup_01_install.py
-t/setup_03_node_install.py
-t/setup_04_node_setup.py
+t/cluster-init.py
 
 ## Setup scripts for lower level directory
 t/spock_2_node_create.py
 
 ## Spock 4.0 Scripts
 t/spock_repair_function.py
+#t/spock_exception_table_case99.py
+t/spock_exception_table_case1.py
+t/spock_exception_table_case2.py
+t/spock_exception_table_case3.py
+t/spock_exception_table_case4.py
 
 
 ## Remove components, Clean environment and free ports
