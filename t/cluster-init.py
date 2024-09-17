@@ -18,11 +18,12 @@ host=os.getenv("EDGE_HOST","localhost")
 repuser=os.getenv("EDGE_REPUSER","susan")
 repset=os.getenv("EDGE_REPSET","demo-repset")
 spockpath=os.getenv("EDGE_SPOCK_PATH")
+spockver=("EDGE_SPOCK_DEFAULT_VER","3.3.6")
+spockpinver=("EDGE_SPOCK_PINNED_VER","3.3.6")
 dbname=os.getenv("EDGE_DB","lcdb")
 
 cwd=os.getcwd()
 num_nodes=3
-
 
 #print("*"*100)
 
@@ -43,20 +44,10 @@ with open(f"{cluster_dir}/{cluster_name}.json", 'r') as file:
     data["node_groups"][1]["path"] = new_path_1
     data["node_groups"][2]["path"] = new_path_2
 
-
-
-#with open(f"{cluster_dir}/{cluster_name}.json", 'r') as file:
-#    data = json.load(file)
-#    #print(data)
-#    data["node_groups"][0]["nodes"][0]["path"] = new_path_0
-#    data["node_groups"][1]["nodes"][0]["path"] = new_path_1
-#    data["node_groups"][2]["nodes"][0]["path"] = new_path_2
-
 newdata = json.dumps(data, indent=4)
 with open(f"{cluster_dir}/{cluster_name}.json", 'w') as file:
     file.write(newdata)
     
-
 
 command = (f"cluster init {cluster_name}")
 init=util_test.run_nc_cmd("This command should initialize a cluster based on the json file", command, f"{home_dir}")
