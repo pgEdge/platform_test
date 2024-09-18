@@ -14,5 +14,4 @@ t/service_enable_error.pl
 
 t/399_um_breakdown_script.pl
 
-t/cleanup_02_remove.py
 t/cleanup_03_remove_nc.py

@@ -25,6 +25,8 @@ for n in range(1,numnodes+1):
     util_test.printres(res)
     if res.returncode != 0:
         util_test.exit_message(f"Couldn't remove node {n}")
+    cmd_node = f"remove backrest"
+    res=util_test.run_nc_cmd("Remove", cmd_node, nodedir)
 
     modules = {
         pgname: False,
