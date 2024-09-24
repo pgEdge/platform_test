@@ -18,12 +18,13 @@ host=os.getenv("EDGE_HOST","localhost")
 repuser=os.getenv("EDGE_REPUSER","susan")
 repset=os.getenv("EDGE_REPSET","demo-repset")
 spockpath=os.getenv("EDGE_SPOCK_PATH")
-spockver=("EDGE_SPOCK_DEFAULT_VER","3.3.6")
-spockpinver=("EDGE_SPOCK_PINNED_VER","3.3.6")
+spockver=os.getenv("EDGE_SPOCK_VER","4.0.1")
 dbname=os.getenv("EDGE_DB","lcdb")
 
 cwd=os.getcwd()
 num_nodes=3
+
+
 
 #print("*"*100)
 
@@ -32,6 +33,8 @@ command = (f"cluster json-template {cluster_name} {dbname} {num_nodes} {usr} {pw
 res=util_test.run_nc_cmd("This command should create a json file that defines a cluster", command, f"{home_dir}")
 print(f"res = {res}\n")
 
+new_ver = (f"{spockver}")
+print(new_ver)
 new_path_0 = (f"{cwd}/{cluster_dir}/n1")
 new_path_1 = (f"{cwd}/{cluster_dir}/n2")
 new_path_2 = (f"{cwd}/{cluster_dir}/n3")
@@ -40,6 +43,7 @@ new_path_2 = (f"{cwd}/{cluster_dir}/n3")
 with open(f"{cluster_dir}/{cluster_name}.json", 'r') as file:
     data = json.load(file)
     #print(data)
+    data["pgedge"]["spock"]["spock_version"] = new_ver
     data["node_groups"][0]["path"] = new_path_0
     data["node_groups"][1]["path"] = new_path_1
     data["node_groups"][2]["path"] = new_path_2
@@ -48,6 +52,7 @@ newdata = json.dumps(data, indent=4)
 with open(f"{cluster_dir}/{cluster_name}.json", 'w') as file:
     file.write(newdata)
     
+print(newdata)
 
 command = (f"cluster init {cluster_name}")
 init=util_test.run_nc_cmd("This command should initialize a cluster based on the json file", command, f"{home_dir}")
