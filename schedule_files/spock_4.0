@@ -3,9 +3,6 @@
 t/setup_01_install.py
 t/cluster-init.py
 
-## Setup scripts for lower level directory
-#t/spock_2_node_create.py
-
 ## Spock 4.0 Scripts
 t/spock_repair_function.py
 #t/spock_exception_table_case99.py
@@ -14,9 +11,7 @@ t/spock_exception_table_case2.py
 t/spock_exception_table_case3.py
 t/spock_exception_table_case4.py
 
-
 ## Remove components, Clean environment and free ports
 t/cleanup_01_node_remove.py
-
 # Delete the nc directory and pgpass file
-t/cleanup_03_remove_nc.py
+#t/cleanup_03_remove_nc.py
