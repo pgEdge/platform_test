@@ -125,13 +125,20 @@ row = util_test.read_psql("SELECT * FROM case1",host,dbname,port2,pw,usr)
 print(f"On n2, our table contains: {row}")
 print("*"*100)
 
+## Query the spock.exception_log; adding this command to cover error in 4.0.4 where a query on the wrong node caused a server crash.
+row1 = util_test.read_psql("SELECT remote_new_tup FROM spock.exception_log WHERE table_name = 'case1';",host,dbname,port1,pw,usr)
+print(f"This command is the query that used to cause a server crash! The result s/b []: {row1}")
+print("*"*100)
+
+if '[]' not in str(row1):
+    util_test.EXIT_FAIL()
+
 ## Read from the spock.exception_log;
 row = util_test.read_psql("SELECT remote_new_tup FROM spock.exception_log WHERE table_name = 'case1';",host,dbname,port2,pw,usr)
-print(f"SELECT * FROM spock.exception_log returns: {row}")
+print(f"SELECT * FROM spock.exception_log on n2 returns: {row}")
 print("*"*100)
 
 if '"value": 2, "attname": "bid", "atttype": "int4"' in str(row):
-    
     util_test.EXIT_PASS()
 else:
     util_test.EXIT_FAIL()
