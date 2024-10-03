@@ -1,10 +1,9 @@
 ##
 # setup scripts
 ##
-t/8000a_env_setup_pgedge_node1.pl
-t/8001a_env_setup_pgedge_node2.pl
-t/8000b_install_pgedge_node1.pl
-t/8001b_install_pgedge_node2.pl
+t/setup_01_install.py
+t/setup_03_node_install.py
+t/setup_04_node_setup.py
 
 ##
 # error tests
@@ -48,5 +47,5 @@ t/spock_sub_create_synch_all_n2.py
 ##
 # uninstall pgedge
 ##
-t/8998_env_remove_pgedge_node1.pl
-t/8999_env_remove_pgedge_node2.pl
+t/cleanup_01_node_remove.py
+t/cleanup_03_remove_nc.py

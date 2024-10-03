@@ -18,8 +18,7 @@ host=os.getenv("EDGE_HOST","localhost")
 repuser=os.getenv("EDGE_REPUSER","susan")
 repset=os.getenv("EDGE_REPSET","demo-repset")
 spockpath=os.getenv("EDGE_SPOCK_PATH")
-spockver=("EDGE_SPOCK_DEFAULT_VER","3.3.6")
-spockpinver=("EDGE_SPOCK_PINNED_VER","3.3.6")
+spockver=("EDGE_SPOCK_VER","3.3.6")
 dbname=os.getenv("EDGE_DB","lcdb")
 
 cwd=os.getcwd()
@@ -64,7 +63,7 @@ print("*"*100)
 # Needle and Haystack
 # Confirm the command worked by looking for:
 
-if "\nSyntaxError" not in str(init.stdout) or init.returncode == 1:
+if "[FAILED]" not in str(init.stdout) or init.returncode == 1:
 
     util_test.EXIT_PASS()
 else:
