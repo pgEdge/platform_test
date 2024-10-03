@@ -110,12 +110,12 @@ row1 = util_test.write_psql(command1,host,dbname,port1,pw,usr)
 print("*"*100)
 
 ## Read from the spock.exception_log;
-row = util_test.read_psql("SELECT remote_new_tup FROM spock.exception_log WHERE table_name = 'queue'",host,dbname,port1,pw,usr)
+row = util_test.read_psql("SELECT remote_new_tup FROM spock.exception_log",host,dbname,port1,pw,usr)
 print(f"SELECT * FROM spock.exception_log on n1 returns: {row}")
 print("*"*100)
 
 ## Read from the spock.exception_log;
-row = util_test.read_psql("SELECT remote_new_tup FROM spock.exception_log WHERE table_name = 'queue';",host,dbname,port2,pw,usr)
+row = util_test.read_psql("SELECT remote_new_tup FROM spock.exception_log",host,dbname,port2,pw,usr)
 print(f"SELECT * FROM spock.exception_log on n2 returns: {row}")
 print("*"*100)
 
