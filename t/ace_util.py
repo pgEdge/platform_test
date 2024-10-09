@@ -30,6 +30,9 @@ DIFF_ERR_NODFILE   = "Diff file {file_name} not found"
 DIFF_ERR_NOTJSON   = "Could not load diff file as JSON"
 DIFF_ERR_DFILEFORM = "Contents of diff file improperly formatted"
 
+SPOCK_MATCH  = "Replication Rules are the same"
+SCHEMA_MATCH = "SCHEMAS ARE THE SAME"
+
 # GENERIC FUNCTIONS
 def run_override(cmd_node: str) -> subprocess.CompletedProcess[str]:
     return util_test.run_cmd("Override", cmd_node, f"{home_dir}")
@@ -75,9 +78,19 @@ def diff_assert_fail(table_name: str, exit_statment: str, args: dict[str: any] =
 
 
 # SPOCK DIFF FUNCTIONS
+def assert_spock_match() -> bool:
+    cmd_node = f"ace spock-diff {cluster}"
+    res      = util_test.run_cmd("spock-diff", cmd_node, f"{home_dir}")
+    print(res.stdout)
+    return res.returncode == 0 and SPOCK_MATCH in res.stdout
 
 
 # SCHEMA DIFF FUNCTIONS
+def assert_schema_match() -> bool:
+    cmd_node = f"ace schema-diff {cluster} public"
+    res      = util_test.run_cmd("schema-diff", cmd_node, f"{home_dir}")
+    print(res.stdout)
+    return res.returncode == 0 and SCHEMA_MATCH in res.stdout
 
 
 # RERUN FUNCTIONS
