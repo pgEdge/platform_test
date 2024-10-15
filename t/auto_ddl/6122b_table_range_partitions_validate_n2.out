@@ -11,11 +11,11 @@ EXECUTE spocktab('sales_range'); -- Expect sales_range, sales_range_2022, sales_
 (3 rows)
 
 EXECUTE spocktab('revenue_range'); -- Expect revenue_range, revenue_range_2023 in default and revenue_range_2021, revenue_range_2022 in default_insert_only set
- nspname |      relname       |      set_name       
----------+--------------------+---------------------
+ nspname |      relname       | set_name 
+---------+--------------------+----------
  public  | revenue_range      | default
- public  | revenue_range_2021 | default_insert_only
- public  | revenue_range_2022 | default_insert_only
+ public  | revenue_range_2021 | default
+ public  | revenue_range_2022 | default
  public  | revenue_range_2023 | default
 (4 rows)
 
@@ -268,8 +268,8 @@ INFO:  DDL statement replicated.
 DROP TABLE
 DROP TABLE revenue_range CASCADE;
 NOTICE:  drop cascades to table revenue_range_2023 membership in replication set default
-NOTICE:  drop cascades to table revenue_range_2022 membership in replication set default_insert_only
-NOTICE:  drop cascades to table revenue_range_2021 membership in replication set default_insert_only
+NOTICE:  drop cascades to table revenue_range_2022 membership in replication set default
+NOTICE:  drop cascades to table revenue_range_2021 membership in replication set default
 NOTICE:  drop cascades to table revenue_range membership in replication set default
 INFO:  DDL statement replicated.
 DROP TABLE
@@ -280,7 +280,7 @@ NOTICE:  drop cascades to table orders_range membership in replication set defau
 INFO:  DDL statement replicated.
 DROP TABLE
 DROP TABLE inventory_range CASCADE;
-NOTICE:  drop cascades to table inventory_standalone membership in replication set default_insert_only
+NOTICE:  drop cascades to table inventory_standalone membership in replication set default
 NOTICE:  drop cascades to table inventory_range_default membership in replication set default
 NOTICE:  drop cascades to table inventory_range_2021 membership in replication set default
 NOTICE:  drop cascades to table inventory_range membership in replication set default

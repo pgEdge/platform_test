@@ -126,17 +126,12 @@ Indexes:
     "revenue_range_pkey" PRIMARY KEY, btree (rev_id, rev_date)
 Number of partitions: 2 (Use \d+ to list them.)
 
-/*TO FIX:
-At present, adding a parimary key to parent table does not move the partitions to default repset.
-To revisit and update outputs once this is addressed
-https://github.com/orgs/pgEdge/projects/6/views/7?filterQuery=category%3AAutoDDL+&visibleFields=%5B%22Title%22%2C%22Assignees%22%2C%22Status%22%2C77649763%5D&pane=issue&itemId=69962278
-*/
 EXECUTE spocktab('revenue_range'); -- Expect revenue_range and all child partitions to move to default set
- nspname |      relname       |      set_name       
----------+--------------------+---------------------
+ nspname |      relname       | set_name 
+---------+--------------------+----------
  public  | revenue_range      | default
- public  | revenue_range_2021 | default_insert_only
- public  | revenue_range_2022 | default_insert_only
+ public  | revenue_range_2021 | default
+ public  | revenue_range_2022 | default
 (3 rows)
 
 -- Add another partition to the modified table
@@ -158,11 +153,11 @@ Indexes:
 Access method: heap
 
 EXECUTE spocktab('revenue_range'); -- Expect revenue_range_2023 in default set
- nspname |      relname       |      set_name       
----------+--------------------+---------------------
+ nspname |      relname       | set_name 
+---------+--------------------+----------
  public  | revenue_range      | default
- public  | revenue_range_2021 | default_insert_only
- public  | revenue_range_2022 | default_insert_only
+ public  | revenue_range_2021 | default
+ public  | revenue_range_2022 | default
  public  | revenue_range_2023 | default
 (4 rows)
 
@@ -312,12 +307,12 @@ INFO:  DDL statement replicated.
 ALTER TABLE
 -- Validate structure and data
 EXECUTE spocktab('inventory'); -- Expect inventory_standalone to be listed
- nspname |         relname         |      set_name       
----------+-------------------------+---------------------
+ nspname |         relname         | set_name 
+---------+-------------------------+----------
  public  | inventory_range         | default
  public  | inventory_range_2021    | default
  public  | inventory_range_default | default
- public  | inventory_standalone    | default_insert_only
+ public  | inventory_standalone    | default
 (4 rows)
 
 SELECT * FROM inventory_standalone ORDER BY product_id; -- Expect 1 row

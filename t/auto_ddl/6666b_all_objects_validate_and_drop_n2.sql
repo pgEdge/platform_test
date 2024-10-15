@@ -1,3 +1,5 @@
+SELECT pg_sleep(2);--to ensure all objects are replicated
+
 ---- Validate all objects on n2 and then drop them on n2 that should also drop objects on n1
 -- Validate database, should not exist
 \l obj_database
