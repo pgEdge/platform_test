@@ -18,7 +18,7 @@ dbname = os.getenv('EDGE_DB')
 startport = int(os.getenv('EDGE_START_PORT'))
 pgversion = os.getenv('EDGE_INST_VERSION')
 pgname = os.getenv('EDGE_COMPONENT')
-spockver = os.getenv('EDGE_SPOCK_DEFAULT_VER')
+spockver = os.getenv('EDGE_SPOCK_VER')
 
 ## Third Setup Script- Turns on Nodes for Testing
 
@@ -27,7 +27,10 @@ for n in range(1,numnodes+1):
     os.chdir(os.path.join(f"n{n}", "pgedge"))
 
     # Deletes copydir
-    cmd_node = f"./{clicommand} setup -U {pgusn} -P {pgpsw} -d {dbname} -p {startport + n - 1} --pg_ver {pgversion} --spock_ver \"{spockver}\""
+    cmd_node = f"./{clicommand} setup -U {pgusn} -P {pgpsw} -d {dbname} -p {startport + n - 1} --pg_ver {pgversion}"
+    if spockver:
+        cmd_node = f"{cmd_node} --spock_ver \"{spockver}\""
+
     res=subprocess.run(cmd_node, shell=True, capture_output=True, text=True)
     util_test.printres(res)
     if res.returncode == 1:
@@ -39,7 +42,7 @@ for n in range(1,numnodes+1):
     modules = {
         pgname: False,
         f"snowflake-{pgname}": False,
-        f"spock33-{pgname}": False
+        f"spock": False
     }
 
     cmd_node = f"./{clicommand} um list"
@@ -50,6 +53,12 @@ for n in range(1,numnodes+1):
         for key in modules.keys():
             if key in line and "Installed" in line:
                 modules[key] = True
+                if key == "spock" and spockver:
+                    if spockver in line:
+                        print(f"Correct spock ver {spockver} is installed")
+                    else:
+                        util_test.exit_message(f"Faild, wrong spock ver {spockver} installed")
+    
     
     for key in modules.keys():
         if modules[key]:

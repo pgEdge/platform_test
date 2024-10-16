@@ -130,7 +130,7 @@ if(!(contains(@$stdout_buf8[0], "888")))
    # Listing table contents of Port2 6433
    
    #   print("Adding call to sleep function")
-   my $cmd999 = qq(sleep($seconds));
+   my $cmd999 = qq(sleep $seconds);
    my($success999, $error_message999, $full_buf999, $stdout_buf999, $stderr_buf999)= IPC::Cmd::run(command => $cmd999, verbose => 0);
    print("cmd999 = $cmd999\n");
    

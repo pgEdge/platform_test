@@ -1,6 +1,6 @@
 ## Set up a two node cluster
-t/020_nodectl_install_pgedge.pl
-t/300_setup_script.pl
+t/setup_01_install.py
+t/setup_02_setup.py
 #t/get_info.py
 
 ## Test Service Module
@@ -271,27 +271,22 @@ t/spock_7_negative_list.py
 t/spock_8_negative_create.py
 
 ## Remove components, Clean environment and free ports
-t/8998_env_remove_pgedge_node1.pl
-t/8999_env_remove_pgedge_node2.pl
-t/9998_remove_nc_and_pgpass_dirs.py
+t/cleanup_01_node_remove.py
+t/cleanup_03_remove_nc.py
 
 ## Run the multi-db cluster tests
-t/020_nodectl_install_pgedge.pl
+t/setup_01_install.py
 t/multi-db_cluster_setup.py
 t/multi-db_cluster_exercise_ace.py
 
 ## Remove components, Clean environment and free ports
-t/8998_env_remove_pgedge_node1.pl
-t/8999_env_remove_pgedge_node2.pl
-t/9998_remove_nc_and_pgpass_dirs.py
+t/cleanup_01_node_remove.py
+t/cleanup_03_remove_nc.py
 
 ## Setup for Filtering Tests
-
-t/020_nodectl_install_pgedge.pl
-t/8000a_env_setup_pgedge_node1.pl
-t/8001a_env_setup_pgedge_node2.pl
-t/8000b_install_pgedge_node1.pl
-t/8001b_install_pgedge_node2.pl
+t/setup_01_install.py
+t/setup_03_node_install.py
+t/setup_04_node_setup.py
 t/8051_env_create_node1.pl
 t/8052_env_create_node2.pl
 t/6000_setup_sub_create_n1n2_n1.pl 
@@ -304,16 +299,13 @@ t/row_filtering.pl
 t/partition_filtering.pl
 
 ## Remove components, Clean environment and free ports
-t/8998_env_remove_pgedge_node1.pl
-t/8999_env_remove_pgedge_node2.pl
+t/cleanup_01_node_remove.py
 
 ## Setup for Snowflake Tests
 
-t/020_nodectl_install_pgedge.pl
-t/8000a_env_setup_pgedge_node1.pl
-t/8001a_env_setup_pgedge_node2.pl
-t/8000b_install_pgedge_node1.pl
-t/8001b_install_pgedge_node2.pl
+t/setup_01_install.py
+t/setup_03_node_install.py
+t/setup_04_node_setup.py
 t/8051_env_create_node1.pl
 t/8052_env_create_node2.pl
 
@@ -324,8 +316,6 @@ t/snowflake_script.py
 t/snowflake_spock_cmds.py
 
 ## Remove components, Clean environment and free ports
-t/8998_env_remove_pgedge_node1.pl
-t/8999_env_remove_pgedge_node2.pl
-t/9998_remove_nc_and_pgpass_dirs.py
-
+t/cleanup_01_node_remove.py
+t/cleanup_03_remove_nc.py
 

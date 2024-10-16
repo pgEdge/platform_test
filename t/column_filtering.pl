@@ -198,11 +198,9 @@ if(!(contains(@$stdout_buf9[0], "DROP TABLE")))
     exit(1);
 }
 
-## Needle and Haystack - Note - this case was erroneously passing before.  I've updated the 'needle' to include the content 
-#  that should be returned when column filtering works, but the number of spaces in the NULL column may need to be adjusted 
-#  when the fix is in: 
+## Needle and Haystack 
 
-if(contains(@$stdout_buf7[0], "8 |             | Alice         | Adams       | 18 Austin Blvd              | Austin, TX   |                | US           |"))
+if(contains(@$stdout_buf7[0], "8 |             | Alice          | Adams         | 18 Austin Blvd"))
 {
     exit(0);
 }

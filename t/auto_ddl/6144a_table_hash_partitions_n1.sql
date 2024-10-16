@@ -80,9 +80,6 @@ ALTER TABLE products_hash ADD PRIMARY KEY (product_id, product_date);
 \d products_hash_2
 \d products_hash_3
 \d products_hash_4
-/*TO FIX:
-commenting this test case due to https://github.com/orgs/pgEdge/projects/6/views/7?filterQuery=category%3AAutoDDL+&visibleFields=%5B%22Title%22%2C%22Assignees%22%2C%22Status%22%2C77649763%5D&pane=issue&itemId=69962278
-only the parent table moves to default repset, all partitions continue to stay in default_insert_only
-*/
+
 EXECUTE spocktab('products_hash'); -- Expect the replication set to change to default
 SELECT * FROM products_hash ORDER BY product_id; -- Expect 4 rows

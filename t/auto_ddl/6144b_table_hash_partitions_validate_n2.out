@@ -143,18 +143,14 @@ Partition of: products_hash FOR VALUES WITH (modulus 4, remainder 3)
 Indexes:
     "products_hash_4_pkey" PRIMARY KEY, btree (product_id, product_date)
 
-/*TO FIX:
-commenting this test case due to https://github.com/orgs/pgEdge/projects/6/views/7?filterQuery=category%3AAutoDDL+&visibleFields=%5B%22Title%22%2C%22Assignees%22%2C%22Status%22%2C77649763%5D&pane=issue&itemId=69962278
-only the parent table moves to default repset, all partitions continue to stay in default_insert_only
-*/
-EXECUTE spocktab('products_hash'); -- Expect the replication set to change to default
- nspname |     relname     |      set_name       
----------+-----------------+---------------------
+EXECUTE spocktab('products_hash'); -- Expect the replication set to be default
+ nspname |     relname     | set_name 
+---------+-----------------+----------
  public  | products_hash   | default
- public  | products_hash_1 | default_insert_only
- public  | products_hash_2 | default_insert_only
- public  | products_hash_3 | default_insert_only
- public  | products_hash_4 | default_insert_only
+ public  | products_hash_1 | default
+ public  | products_hash_2 | default
+ public  | products_hash_3 | default
+ public  | products_hash_4 | default
 (5 rows)
 
 SELECT * FROM products_hash ORDER BY product_id; -- Expect 4 rows
@@ -168,10 +164,10 @@ SELECT * FROM products_hash ORDER BY product_id; -- Expect 4 rows
 
 --exercise ddl on n2
 DROP TABLE products_hash CASCADE;
-NOTICE:  drop cascades to table products_hash_4 membership in replication set default_insert_only
-NOTICE:  drop cascades to table products_hash_3 membership in replication set default_insert_only
-NOTICE:  drop cascades to table products_hash_2 membership in replication set default_insert_only
-NOTICE:  drop cascades to table products_hash_1 membership in replication set default_insert_only
+NOTICE:  drop cascades to table products_hash_4 membership in replication set default
+NOTICE:  drop cascades to table products_hash_3 membership in replication set default
+NOTICE:  drop cascades to table products_hash_2 membership in replication set default
+NOTICE:  drop cascades to table products_hash_1 membership in replication set default
 NOTICE:  drop cascades to table products_hash membership in replication set default
 INFO:  DDL statement replicated.
 DROP TABLE

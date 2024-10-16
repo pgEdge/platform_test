@@ -175,11 +175,7 @@ EXECUTE spocktab('table_ctas5'); -- should be in default_insert_only set
 EXPLAIN ANALYZE CREATE TABLE table_ctas6 AS
 SELECT 1 AS a;
 \o
-/*
-TO FIX: 
-At present, no repset is assigned for table created through EXPLAIN ANALYZE
-https://github.com/orgs/pgEdge/projects/6/views/7?filterQuery=category%3AAutoDDL+&visibleFields=%5B%22Title%22%2C%22Assignees%22%2C%22Status%22%2C77649763%5D&pane=issue&itemId=65421352
-*/
+
 -- Validate table_ctas6
 \d table_ctas6
 EXECUTE spocktab('table_ctas6'); -- should be in default_insert_only set

@@ -61,11 +61,7 @@ EXECUTE spocktab('sales_range'); -- Expect sales_range_2023 in default set
 -- Add a primary key to a range partitioned table that initially didn't have one
 ALTER TABLE revenue_range ADD PRIMARY KEY (rev_id, rev_date);
 \d revenue_range
-/*TO FIX:
-At present, adding a parimary key to parent table does not move the partitions to default repset.
-To revisit and update outputs once this is addressed
-https://github.com/orgs/pgEdge/projects/6/views/7?filterQuery=category%3AAutoDDL+&visibleFields=%5B%22Title%22%2C%22Assignees%22%2C%22Status%22%2C77649763%5D&pane=issue&itemId=69962278
-*/
+
 EXECUTE spocktab('revenue_range'); -- Expect revenue_range and all child partitions to move to default set
 
 -- Add another partition to the modified table

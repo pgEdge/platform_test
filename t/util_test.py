@@ -1,5 +1,7 @@
-import sys, os, psycopg, json, subprocess, shutil, re, csv
+import sys, os, psycopg, json, subprocess, shutil, re, csv, socket
 from dotenv import load_dotenv
+from psycopg import sql
+
 
 def EXIT_PASS():
     print("pass")
@@ -22,6 +24,57 @@ def exit_message(p_msg, p_rc=1):
        print(f"ERROR {p_msg}")
     sys.exit(p_rc)
  
+
+# **************************************************************************************************************
+## Enable AutoDDL
+# **************************************************************************************************************
+# To call this function, pass a connection string:
+#     command = util_test.enable_autoddl(host, dbname, port, pw, usr)
+
+## Get a connection - this connection sets autocommit to True and returns authentication error information
+
+def get_autoddl_conn(host,dbname,port,pw,usr):
+    try:
+        conn = psycopg.connect(dbname=dbname, user=usr, host=host, port=port, password=pw)
+        conn.autocommit = True
+        print("Your connection is established, with autocommit = True")
+        return conn
+
+    except Exception as e:
+        conn = None
+        print("The connection attempt failed")
+    return(con1)
+
+##############################
+
+def enable_autoddl(host, dbname, port, pw, usr):
+    try:   
+        # Connect to the PostgreSQL database
+
+        conn = get_autoddl_conn(host,dbname,port,pw,usr)
+        cur = conn.cursor()
+        # We'll execute the following commands:
+        
+        cur.execute("ALTER SYSTEM SET spock.enable_ddl_replication = on")
+        cur.execute("ALTER SYSTEM SET spock.include_ddl_repset = on")
+        cur.execute("ALTER SYSTEM SET spock.allow_ddl_from_functions = on")
+	
+        # Then, reload the PostgreSQL configuration:
+        cur.execute("SELECT pg_reload_conf()")
+        print("PostgreSQL configuration reloaded.")
+
+        # Close the cursor and connection
+        cur.close()
+        conn.close()
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
+
+
+
+
 
 # ************************************************************************************************************** 
 ## Run a pgEdge command
@@ -419,3 +472,78 @@ def printres(res: subprocess.CompletedProcess[str]) -> None:
         print("stderr:")
         for line in error.splitlines():
             print(f"\t{line}")
+
+###################################################################
+## Find an available port
+###################################################################
+def get_avail_ports(p_def_port):
+    def_port = int(p_def_port)
+
+    # iterate to first non-busy port
+    while is_socket_busy(def_port):
+        def_port = def_port + 1
+        continue
+
+    err_msg = "Port must be between 1000 and 9999, try again."
+
+    while True:
+        s_port = str(def_port)
+
+        if s_port.isdigit() == False:
+            print(err_msg)
+            continue
+
+        i_port = int(s_port)
+
+        if (i_port < 1000) or (i_port > 9999):
+            print(err_msg)
+            continue
+
+        if is_socket_busy(i_port):
+            if not isJSON:
+                print("Port " + str(i_port) + " is in use.")
+            def_port = str(i_port + 1)
+            continue
+
+        break
+
+    return i_port
+
+## Required for get_available_port    
+
+def is_socket_busy(p_port):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    result = s.connect_ex(("127.0.0.1",p_port))
+    s.close()
+    print(result)
+    if result == 0:
+        return True
+    else:
+        return False
+    
+######################################################################
+# Find the pg_versions available to um
+######################################################################
+
+def find_pg_versions(home_dir):
+    components = []
+    ## We need to pass in the value of {home_dir}; it should return a list of components with the pg removed from the front.
+    ## Use um to find all of the available versions of Postgres.
+    res=run_nc_cmd("Getting list of available versions of Postgres", "um list --json", f"{home_dir}")
+    print(f"{res}")
+
+    ## Break the returned json string into a list:
+    res = json.loads(res.stdout)
+    ## Go through the json and find the available PG versions and append it to the components variable:
+    for i in res:
+        comp=(i.get("component"))
+        print(comp)
+        ## Append the component name to the components variable:
+        components.append(comp)
+        print(components)
+        ## Remove the first two letters from in front of the component name (pgXX) to make it just the version (XX):
+        versions = [item[2:] for item in components]
+        print(versions)
+    return versions, components
+
+######################################################################

@@ -1,6 +1,6 @@
 t/setup_01_install.py
-t/setup_02_nodecreate.py
-t/setup_03_noderun.py
+t/setup_03_node_install.py
+t/setup_04_node_setup.py
 t/cluster_1_gen_json.py
 
 t/ace_70_functionality.py
@@ -9,5 +9,5 @@ t/ace_72_edge_cases.py
 t/ace_73_bigloop.py
 t/ace_74_diff_files.py
 
-t/cleanup_01_noderemove.py
-t/cleanup_02_pgremove.py
+t/cleanup_01_node_remove.py
+t/cleanup_03_remove_nc.py
