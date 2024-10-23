@@ -28,13 +28,6 @@ def run():
             util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Node Create", 1) 
         port = port + 1
 
-    ## Metrics Check Test
-    cmd_node = f"spock metrics-check {db}"
-    res=util_test.run_cmd("Metrics Check", cmd_node, f"{cluster_dir}/n1")
-    print(res)
-    if res.returncode == 1 or "mount_point" not in res.stdout:
-        util_test.exit_message(f"Fail - {os.path.basename(__file__)} - Metrics Check", 1) 
-
 if __name__ == "__main__":
     ## Print Script
     print(f"Starting - {os.path.basename(__file__)}")

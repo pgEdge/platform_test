@@ -249,9 +249,9 @@ SELECT * FROM table_ctas5 ORDER BY num;
  a      | integer |           |          | 
 
 EXECUTE spocktab('table_ctas6'); -- Replication set: default_insert_only
- nspname |   relname   | set_name 
----------+-------------+----------
- public  | table_ctas6 | 
+ nspname |   relname   |      set_name       
+---------+-------------+---------------------
+ public  | table_ctas6 | default_insert_only
 (1 row)
 
 -- Expected data: 1
@@ -547,6 +547,7 @@ NOTICE:  drop cascades to table table_ctas5 membership in replication set defaul
 INFO:  DDL statement replicated.
 DROP TABLE
 DROP TABLE table_ctas6;
+NOTICE:  drop cascades to table table_ctas6 membership in replication set default_insert_only
 INFO:  DDL statement replicated.
 DROP TABLE
 --cleanup for select into
