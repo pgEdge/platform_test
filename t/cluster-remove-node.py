@@ -52,6 +52,7 @@ res2=util_test.run_nc_cmd("This command should remove node n3 and succeed", comm
 print(f"Successful command: {command2}")
 print(f"The successful remove-node command returns = {res2}\n")
 print("*"*100)
+print("This test case only removes the replication artifacts.  The PG installation, data directory, and n3 subdir will remain")
 
 # Needle and Haystack
 # Confirm the command worked by looking for:

@@ -25,7 +25,6 @@ cwd=os.getcwd()
 num_nodes=3
 
 
-
 #print("*"*100)
 
 print(f"home_dir = {home_dir}\n")
@@ -34,7 +33,7 @@ res=util_test.run_nc_cmd("This command should create a json file that defines a 
 print(f"res = {res}\n")
 
 new_ver = (f"{spockver}")
-print(new_ver)
+print(f"Spock new version is: {new_ver}")
 new_path_0 = (f"{cwd}/{cluster_dir}/n1")
 new_path_1 = (f"{cwd}/{cluster_dir}/n2")
 new_path_2 = (f"{cwd}/{cluster_dir}/n3")

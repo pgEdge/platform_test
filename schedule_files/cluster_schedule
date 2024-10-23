@@ -1,18 +1,23 @@
 ## Set up tests for a two node cluster
 t/setup_01_install.py
-t/cluster-create-json.py
-t/cluster-json-validate.py
-t/cluster-json-invalid-file.py
 t/cluster-init.py
-t/get_info.py
 t/cluster-remove-node.py
 t/cluster-add-node.py
 t/cluster-list-nodes.py
-t/cluster-init-bad-json.py
 t/cluster-replication-check.py
 
 ## Remove components, Clean environment and free ports
 t/cleanup_01_node_remove.py
+t/cleanup_03_remove_nc.py
+
+t/setup_01_install.py
+t/cluster-create-json.py
+t/cluster-json-validate.py
+t/cluster-json-invalid-file.py
+t/cluster-init-bad-version.py
+t/cluster-init-bad-json.py
+
+## Remove components, Clean environment and free ports
 t/cleanup_03_remove_nc.py
 
 ## Multi-node cluster tests
